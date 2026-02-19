@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}Grant Summary{% endblock %}
+
+{% block content %}
+<!-- Print Header (hidden on screen, visible on print) -->
+<div class="print-header" style="display: none;">
+    <img src="{{ url_for('static', filename='images/Malawi Government logo.png') }}" alt="Malawi Government">
+    <h1>Grant Summary</h1>
+    <div class="school-info">{{ (settings.ministry if settings else 'NANJATI CDSS') }} | Financial Year: {{ financial_year }}</div>
+</div>
+
+<div class="max-w-full h-screen overflow-hidden">
+    {% if not budget %}
+    <!-- Header Section -->
+    <div class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-800 text-white p-8 rounded-lg shadow-xl mb-8">
+        <h1 class="text-4xl font-bold mb-2">Grant Summary</h1>
+        <p class="text-blue-100 text-lg">Initialize a budget to get started</p>
+    </div>
+
+        <div class="flex items-center justify-center gap-2 mb-4">
+            <input type="text" value="{{ financial_year }}" onchange="changeFinancialYear(this.value)"
+                class="px-3 py-2 border rounded-md text-sm w-32 text-center" placeholder="2026-2027">
+            <a href="{{ url_for('initialize_budget') }}"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md inline-flex items-center">
+                <i class="fas fa-plus mr-2"></i>Initialize Budget
+            </a>
+        </div>
+    </div>
+    {% else %}
+
+    <!-- Compact Header -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-800 text-white p-2 rounded mb-2">
+        <div class="flex justify-between items-center">
+            <h1 class="text-base font-bold">{{ budget.schoolName }} - {{ budget.financialYear }}</h1>
+            <button onclick="printPage('Grant Summary')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded text-sm no-print">
+                <i class="fas fa-print mr-1"></i>Print Summary
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Row -->
+    <div class="grid grid-cols-4 gap-2 mb-2">
+        <div class="bg-blue-500 text-white rounded p-2 text-center">
+            <p class="text-xs opacity-90">Total Grant</p>
+            <p class="text-lg font-bold">K{{ "{:,.0f}".format(total_grant) }}</p>
+        </div>
+        <div class="bg-green-500 text-white rounded p-2 text-center">
+            <p class="text-xs opacity-90">Total Budgeted</p>
+            <p class="text-lg font-bold">K{{ "{:,.0f}".format(total_budgeted) }}</p>
+        </div>
+        <div class="bg-purple-500 text-white rounded p-2 text-center">
+            <p class="text-xs opacity-90">Total Credits</p>
+            <p class="text-lg font-bold">K{{ "{:,.0f}".format(total_credited) }}</p>
+        </div>
+        <div class="bg-red-500 text-white rounded p-2 text-center">
+            <p class="text-xs opacity-90">Total Spent</p>
+            <p class="text-lg font-bold">K{{ "{:,.0f}".format(total_spent) }}</p>
+        </div>
+    </div>
+
+    <!-- Main Charts Row -->
+    <div class="grid grid-cols-3 gap-2 mb-2" style="height: 180px;">
+        <!-- Budget Allocation -->
+        <div class="bg-white rounded shadow p-2" style="height: 100%;">
+            <h3 class="text-xs font-bold mb-1">Budget Allocation</h3>
+            <div style="height: calc(100% - 20px); position: relative;">
+                <canvas id="budgetAllocationChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Credit Register -->
+        <div class="bg-white rounded shadow p-2" style="height: 100%;">
+            <h3 class="text-xs font-bold mb-1">Credit Register</h3>
+            <div style="height: calc(100% - 20px); position: relative;">
+                <canvas id="creditRegisterChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Debit Register -->
+        <div class="bg-white rounded shadow p-2" style="height: 100%;">
+            <h3 class="text-xs font-bold mb-1">Debit Register</h3>
+            <div style="height: calc(100% - 20px); position: relative;">
+                <canvas id="debitRegisterChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Charts Row -->
+    <div class="grid grid-cols-2 gap-2" style="height: 150px;">
+        <!-- Spending Tracking -->
+        <div class="bg-white rounded shadow p-2" style="height: 100%;">
+            <h3 class="text-xs font-bold mb-1">Spending Tracking</h3>
+            <div style="height: calc(100% - 20px); position: relative;">
+                <canvas id="spendingTrackingChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Financial Overview -->
+        <div class="bg-white rounded shadow p-2" style="height: 100%;">
+            <h3 class="text-xs font-bold mb-1">Credits vs Debits</h3>
+            <div style="height: calc(100% - 20px); position: relative;">
+                <canvas id="comboChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+
+<style>
+@media print {
+    @page {
+        size: A4 landscape;
+        margin: 1cm;
+    }
+
+    /* Print Header */
+    body::before {
+        content: "";
+        display: block;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 80px;
+        background: white;
+        border-bottom: 2px solid #000;
+        z-index: 1000;
+    }
+
+    .print-header {
+        display: block !important;
+        position: fixed;
+        top: 10px;
+        left: 0;
+        right: 0;
+        height: 60px;
+        background: white;
+        z-index: 1001;
+        padding: 0 20px;
+    }
+
+    .print-header img {
+        height: 40px;
+        float: left;
+        margin-top: 5px;
+    }
+
+    .print-header h1 {
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+        margin: 5px 0;
+        line-height: 1.2;
+    }
+
+    .print-header .school-info {
+        text-align: center;
+        font-size: 12px;
+        margin-top: 2px;
+    }
+
+    /* Adjust content for header */
+    .max-w-full {
+        margin-top: 90px !important;
+    }
+
+    /* Hide scrollbars */
+    body {
+        overflow: visible !important;
+    }
+
+    * {
+        overflow: visible !important;
+    }
+
+    ::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+{% if budget %}
+const months = {{ months|tojson }};
+const monthlyCredits = {{ monthly_credits|tojson }};
+const monthlyDebits = {{ monthly_debits|tojson }};
+
+// Wait for DOM to be fully loaded
+window.addEventListener('DOMContentLoaded', function() {
+    // Budget Allocation - Doughnut Chart
+    const budgetChart = new Chart(document.getElementById('budgetAllocationChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Budgeted', 'Remaining'],
+            datasets: [{
+                data: [{{ total_budgeted }}, {{ total_grant - total_budgeted }}],
+                backgroundColor: ['#3B82F6', '#E5E7EB'],
+                borderWidth: 1,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 5, font: { size: 9 } } },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ctx.label + ': K' + ctx.parsed.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+
+    // Credit Register - 2D Pie Chart
+    const creditChart = new Chart(document.getElementById('creditRegisterChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Credits', 'Remaining'],
+            datasets: [{
+                data: [{{ total_credited }}, {{ total_grant - total_credited }}],
+                backgroundColor: ['#10B981', '#F3F4F6'],
+                borderWidth: 1,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 5, font: { size: 9 } } },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ctx.label + ': K' + ctx.parsed.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+
+    // Debit Register - 2D Pie Chart
+    const debitChart = new Chart(document.getElementById('debitRegisterChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Spent', 'Available'],
+            datasets: [{
+                data: [{{ total_spent }}, {{ total_credited - total_spent }}],
+                backgroundColor: ['#EF4444', '#FEF3C7'],
+                borderWidth: 1,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { padding: 5, font: { size: 9 } } },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ctx.label + ': K' + ctx.parsed.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+
+    // Spending Tracking - Horizontal Line Chart
+    const spendingChart = new Chart(document.getElementById('spendingTrackingChart'), {
+        type: 'line',
+        data: {
+            labels: months,
+            datasets: [{
+                label: 'Spending',
+                data: monthlyDebits,
+                borderColor: '#8B5CF6',
+                backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                tension: 0.4,
+                fill: true,
+                pointRadius: 2,
+                pointBackgroundColor: '#8B5CF6'
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => 'K' + ctx.parsed.x.toLocaleString()
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: { size: 9 },
+                        callback: (val) => 'K' + val.toLocaleString()
+                    }
+                },
+                y: {
+                    ticks: {
+                        font: { size: 9 }
+                    }
+                }
+            }
+        }
+    });
+
+    // Combo Chart - Horizontal Bar (Credits vs Debits)
+    const comboChart = new Chart(document.getElementById('comboChart'), {
+        type: 'bar',
+        data: {
+            labels: months,
+            datasets: [
+                {
+                    label: 'Credits',
+                    data: monthlyCredits,
+                    backgroundColor: '#10B981',
+                    borderRadius: 3
+                },
+                {
+                    label: 'Debits',
+                    data: monthlyDebits,
+                    backgroundColor: '#EF4444',
+                    borderRadius: 3
+                }
+            ]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'top', labels: { padding: 5, font: { size: 9 } } },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => ctx.dataset.label + ': K' + ctx.parsed.x.toLocaleString()
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: { size: 9 },
+                        callback: (val) => 'K' + val.toLocaleString()
+                    }
+                },
+                y: {
+                    ticks: {
+                        font: { size: 9 }
+                    }
+                }
+            }
+        }
+    });
+});
+{% endif %}
+</script>
+{% endblock %}

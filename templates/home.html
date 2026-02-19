@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="relative min-h-screen flex items-center justify-center overflow-hidden">
+
+  <!-- Grass Background -->
+  <div class="absolute inset-0 bg-gradient-to-b from-green-100 via-green-50 to-green-200"></div>
+
+  <!-- Malawi Government Logo Background (More Visible) -->
+  <div class="absolute inset-0 flex items-center justify-center opacity-60">
+    <img src="{{ url_for('static', filename='images/Malawi Government logo.png') }}"
+         class="w-[600px] max-w-[90%] object-contain"
+         alt="Malawi Government Logo">
+  </div>
+
+  <!-- Content Card -->
+  <div class="relative z-10 w-full max-w-4xl px-6">
+    <!-- Glass Container with More Transparency -->
+    <div class="bg-white/20 backdrop-blur-md shadow-2xl rounded-3xl p-10 border border-white/40">
+
+      <!-- School Info Header -->
+      <div class="text-center mb-6">
+        <h1 class="text-3xl font-bold text-green-800 mb-2 drop-shadow-lg">
+          {{ school_name or 'Grant Management System' }}
+        </h1>
+        <p class="text-gray-800 font-medium drop-shadow">
+          Financial Year: <span class="font-semibold">{{ financial_year }}</span> | 
+          Total Grant: <span class="font-semibold">MWK {{ "{:,.2f}".format(total_grant) }}</span>
+        </p>
+      </div>
+
+      <hr class="my-6 border-white/50">
+
+      <h2 class="text-2xl font-bold text-center text-gray-900 mb-4 drop-shadow">
+        RN-LAB-TECH Grant Management System
+      </h2>
+
+      <p class="text-gray-900 text-lg leading-relaxed text-center font-medium drop-shadow">
+        Manage your school finances with confidence. This system provides a complete budget allocation structure for all 16 POWs,
+        including detailed line items, monthly allocations, category totals, and Malawi standard budget coding, all downloadable for official reference.
+        It also ensures full audit and compliance by maintaining a complete transaction trail and generating key documents such as
+        GP10 Payment Vouchers, Loose Minutes, and Payment Receipts for accountability and grant reporting.
+      </p>
+
+      <div class="mt-8 flex justify-center gap-4">
+        <a href="{{ url_for('grant_summary') }}" class="px-6 py-3 bg-green-700 text-white rounded-xl shadow-lg hover:bg-green-800 hover:shadow-xl transition-all">
+          Enter System Dashboard
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}

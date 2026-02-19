@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Developer Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-red-900 text-white p-4 shadow-lg">
+            <div class="container mx-auto flex justify-between items-center">
+                <h1 class="text-2xl font-bold">
+                    <i class="fas fa-shield-alt mr-2"></i>Developer Dashboard
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm">{{ session.user.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </header>
+
+        <div class="container mx-auto p-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Schools</p>
+                            <p class="text-3xl font-bold text-blue-600">{{ stats.total_schools }}</p>
+                        </div>
+                        <i class="fas fa-school text-4xl text-blue-200"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Active Schools</p>
+                            <p class="text-3xl font-bold text-green-600">{{ stats.active_schools }}</p>
+                        </div>
+                        <i class="fas fa-check-circle text-4xl text-green-200"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Online Now</p>
+                            <p class="text-3xl font-bold text-purple-600">{{ stats.online_schools }}</p>
+                        </div>
+                        <i class="fas fa-wifi text-4xl text-purple-200"></i>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-gray-500 text-sm">Expired</p>
+                            <p class="text-3xl font-bold text-red-600">{{ stats.expired_schools }}</p>
+                        </div>
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-200"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4">Quick Actions</h2>
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="showAddSchoolModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg">
+                        <i class="fas fa-plus mr-2"></i>Add New School
+                    </button>
+                    <button onclick="sendExpiryWarnings()" class="bg-yellow-600 hover:bg-yellow-700 text-white px-6 py-3 rounded-lg">
+                        <i class="fas fa-bell mr-2"></i>Send Expiry Warnings
+                    </button>
+                </div>
+            </div>
+
+            <!-- Schools Table -->
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <div class="p-6 border-b">
+                    <h2 class="text-xl font-bold">Manage Schools</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">School Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Username</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subscription</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Last Login</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for school in schools %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ school.school_name }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">{{ school.username }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if school.is_locked %}
+                                    <span class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded">Locked</span>
+                                    {% elif school.is_active %}
+                                    <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Active</span>
+                                    {% else %}
+                                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">Inactive</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 py-1 text-xs rounded
+                                        {% if school.subscription_status == 'PAID' %}bg-green-100 text-green-800
+                                        {% elif school.subscription_status == 'EXPIRED' %}bg-red-100 text-red-800
+                                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                        {{ school.subscription_status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    {{ school.last_login or 'Never' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                    <button onclick="updateSubscription({{ school.id }})" class="text-purple-600 hover:text-purple-800" title="Update Subscription">
+                                        <i class="fas fa-credit-card"></i>
+                                    </button>
+                                    <button onclick="resetPassword({{ school.id }})" class="text-blue-600 hover:text-blue-800" title="Reset Password">
+                                        <i class="fas fa-key"></i>
+                                    </button>
+                                    <button onclick="toggleLock({{ school.id }}, {{ school.is_locked }})" 
+                                            class="text-yellow-600 hover:text-yellow-800" title="{% if school.is_locked %}Unlock{% else %}Lock{% endif %} School">
+                                        <i class="fas fa-{% if school.is_locked %}unlock{% else %}lock{% endif %}"></i>
+                                    </button>
+                                    <button onclick="sendMessage({{ school.id }})" class="text-green-600 hover:text-green-800" title="Send Message">
+                                        <i class="fas fa-envelope"></i>
+                                    </button>
+                                    <button onclick="deleteSchool({{ school.id }}, '{{ school.school_name }}')" class="text-red-600 hover:text-red-800" title="Delete School">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add School Modal -->
+    <div id="addSchoolModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen px-4">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                <h3 class="text-xl font-bold mb-4">Add New School</h3>
+                <form id="addSchoolForm" method="POST" action="{{ url_for('dev_add_school') }}">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">School Name</label>
+                        <input type="text" name="school_name" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Username</label>
+                        <input type="text" name="username" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Initial Password</label>
+                        <input type="password" name="password" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium mb-2">Financial Year</label>
+                        <select name="financial_year" required class="w-full px-3 py-2 border rounded-lg">
+                            <option value="2026-2027">2026-2027</option>
+                            <option value="2027-2028">2027-2028</option>
+                            <option value="2028-2029">2028-2029</option>
+                            <option value="2029-2030">2029-2030</option>
+                            <option value="2030-2031">2030-2031</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1">School will start with 30-day trial and zero budget allocations</p>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeAddSchoolModal()" class="px-4 py-2 border rounded-lg">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Add School (30-Day Trial)</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showAddSchoolModal() {
+            document.getElementById('addSchoolModal').classList.remove('hidden');
+        }
+        
+        function closeAddSchoolModal() {
+            document.getElementById('addSchoolModal').classList.add('hidden');
+        }
+        
+        function resetPassword(schoolId) {
+            if (confirm('Generate OTP for this school?')) {
+                fetch(`/dev/reset-password/${schoolId}`, { method: 'POST' })
+                    .then(r => r.json())
+                    .then(data => {
+                        alert(`OTP Generated: ${data.otp}\nExpires in 24 hours`);
+                    });
+            }
+        }
+        
+        function toggleLock(schoolId, isLocked) {
+            const action = isLocked ? 'unlock' : 'lock';
+            if (confirm(`${action.toUpperCase()} this school?`)) {
+                fetch(`/dev/${action}-school/${schoolId}`, { method: 'POST' })
+                    .then(() => location.reload());
+            }
+        }
+        
+        function deleteSchool(schoolId, schoolName) {
+            if (confirm(`Are you sure you want to delete ${schoolName}? This action cannot be undone.\n\nAll data including budget, credits, debits, and settings will be permanently deleted.`)) {
+                fetch(`/dev/delete-school/${schoolId}`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message);
+                            location.reload();
+                        } else {
+                            alert('Error: ' + data.error);
+                        }
+                    });
+            }
+        }
+        
+        function updateSubscription(schoolId) {
+            const paymentDate = prompt('Payment Date (YYYY-MM-DD):');
+            if (!paymentDate) return;
+            
+            const plan = prompt('Subscription Plan:\n1 = 90 days (MWK 300,000)\n2 = 180 days (MWK 500,000)\n3 = 1 year (MWK 800,000)\n4 = 5 years (MWK 3,500,000)\n\nEnter plan number:');
+            if (!plan) return;
+            
+            const plans = {
+                '1': { days: 90, amount: 300000 },
+                '2': { days: 180, amount: 500000 },
+                '3': { days: 365, amount: 800000 },
+                '4': { days: 1825, amount: 3500000 }
+            };
+            
+            if (!plans[plan]) {
+                alert('Invalid plan selected');
+                return;
+            }
+            
+            fetch(`/dev/update-subscription/${schoolId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    payment_date: paymentDate,
+                    amount_paid: plans[plan].amount,
+                    subscription_days: plans[plan].days
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(`Subscription updated! Expires: ${data.expiry_date}`);
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.error);
+                }
+            });
+        }
+        
+        function sendMessage(schoolId) {
+            const message = prompt('Enter message to send:');
+            if (message) {
+                fetch(`/dev/send-message/${schoolId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message })
+                }).then(() => alert('Message sent'));
+            }
+        }
+        
+        function sendExpiryWarnings() {
+            if (confirm('Send expiry warnings to all schools expiring within 7 days?')) {
+                fetch('/dev/send-expiry-warnings', { method: 'POST' })
+                    .then(r => r.json())
+                    .then(data => alert(`Sent ${data.count} warnings`));
+            }
+        }
+    </script>
+</body>
+</html>

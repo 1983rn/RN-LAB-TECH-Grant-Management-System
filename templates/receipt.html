@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAYMENT RECEIPT - {{ debit.supplierName }}</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 30px;
+            color: #333;
+            background-color: #fff;
+        }
+
+        .receipt-container {
+            max-width: 650px;
+            margin: auto;
+            border: 2px solid #000;
+            padding: 25px;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .school-info h1 {
+            margin: 0;
+            font-size: 16px;
+            text-transform: uppercase;
+            color: #2c3e50;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .school-info p {
+            margin: 3px 0;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .receipt-stamp {
+            border: 3px solid #e74c3c;
+            color: #e74c3c;
+            padding: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transform: rotate(-5deg);
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .receipt-stamp .label {
+            font-size: 12px;
+            display: block;
+        }
+
+        .receipt-stamp .number {
+            font-size: 18px;
+        }
+
+        .receipt-title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-decoration: underline;
+        }
+
+        .details-grid {
+            margin-bottom: 40px;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 10px;
+            border-bottom: 1px dotted #ccc;
+            padding-bottom: 4px;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            width: 180px;
+            color: #555;
+        }
+
+        .detail-value {
+            flex: 1;
+            font-style: italic;
+        }
+
+        .amount-highlight {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .signature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .sig-block {
+            text-align: center;
+        }
+
+        .sig-line {
+            border-top: 1px solid #000;
+            margin-bottom: 5px;
+        }
+
+        .sig-label {
+            font-size: 12px;
+            color: #555;
+        }
+
+        .no-print-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            display: block;
+            margin: 0 auto 30px auto;
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 1cm 1.5cm 0.5cm 1.5cm;
+            }
+
+            .no-print-btn {
+                display: none;
+            }
+
+            body {
+                padding: 0;
+                margin: 0;
+                font-size: 16px;
+            }
+
+            .receipt-container {
+                border: 2px solid #000;
+                width: 100%;
+                max-width: 100%;
+                padding: 30px;
+                margin: 0;
+                box-sizing: border-box;
+            }
+
+            .header {
+                margin-bottom: 25px;
+                padding-bottom: 18px;
+            }
+
+            .school-info h1 {
+                font-size: 24px;
+            }
+
+            .school-info p {
+                margin: 6px 0;
+                font-size: 15px;
+            }
+
+            .receipt-stamp {
+                padding: 12px;
+            }
+
+            .receipt-stamp .label {
+                font-size: 13px;
+            }
+
+            .receipt-stamp .number {
+                font-size: 18px;
+            }
+
+            .receipt-title {
+                margin-bottom: 25px;
+                font-size: 20px;
+            }
+
+            .details-grid {
+                margin-bottom: 30px;
+            }
+
+            .detail-row {
+                margin-bottom: 14px;
+                padding-bottom: 6px;
+            }
+
+            .detail-label {
+                font-size: 15px;
+            }
+
+            .detail-value {
+                font-size: 15px;
+            }
+
+            .amount-highlight {
+                margin: 25px 0;
+                padding: 18px;
+                font-size: 22px;
+            }
+
+            .signature-grid {
+                margin-top: 70px;
+                gap: 30px;
+            }
+
+            .sig-line {
+                margin-top: 70px;
+            }
+
+            .sig-label {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="window.print()" class="no-print-btn">Print Receipt</button>
+
+    <div class="receipt-container">
+        <div class="header">
+            <img src="{{ url_for('static', filename='images/Malawi Government logo.png') }}" alt="Malawi Government" style="height: 1.5cm; width: auto;">
+            <div class="school-info">
+                <h1>{{ budget.schoolName }}</h1>
+                <p>Grant Management System - Financial Records</p>
+                <p><strong>Financial Year:</strong> {{ budget.financialYear }}</p>
+                <p><strong>Month:</strong> {{ debit.month }}</p>
+            </div>
+            <div class="receipt-stamp">
+                <span class="label">Receipt No.</span>
+                <span class="number">#{{ debit.receiptNumber or '0001' }}</span>
+            </div>
+        </div>
+
+        <div class="receipt-title">PAYMENT RECEIPT</div>
+
+        <div class="details-grid">
+            <div class="detail-row">
+                <span class="detail-label">Date of Payment:</span>
+                <span class="detail-value">{{ debit.date }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Payee Name:</span>
+                <span class="detail-value" style="font-weight: bold;">{{ debit.supplierName }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Activity/Service:</span>
+                <span class="detail-value">{{ debit.description }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Budget Code:</span>
+                <span class="detail-value">{{ debit.code }} ({{ debit.subItemDescription }})</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount in Words:</span>
+                <span class="detail-value">{{ debit.amountWords }}</span>
+            </div>
+        </div>
+
+        <div class="amount-highlight">
+            TOTAL PAID: MWK {{ "{:,.2f}".format(debit.amount) }}
+        </div>
+
+        <div class="signature-grid">
+            <div class="sig-block">
+                <div class="sig-line" style="margin-top: 80px;"></div>
+                <div class="sig-label">PAYEE'S SIGNATURE</div>
+                <div style="font-size: 10px;">(Confirmation of Funds Received)</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line" style="margin-top: 80px;"></div>
+                <div class="sig-label">AUTHORIZED OFFICER</div>
+                <div style="font-size: 10px;">{{ debit.position }} - {{ budget.schoolName }}</div>
+            </div>
+        </div>
+
+        <div style="margin-top: 30px; font-size: 9px; color: #999; text-align: center; padding-top: 8px;">
+            This is an Official RN-LAB-TECH- Grant Management System.
+            Generated: <span id="timestamp"></span>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - Grant Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-image: url("{{ url_for('static', filename='images/Malawi flag.png') }}");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .overlay {
+            background: rgba(0, 0, 0, 0.1);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .text-container {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.9), 0 0 20px rgba(0, 0, 0, 0.5);
+            font-weight: 900;
+        }
+        .text-container p {
+            text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.8), 0 0 10px rgba(0, 0, 0, 0.4);
+            font-weight: 600;
+        }
+        .text-container strong {
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay">
+        <!-- Main Content -->
+        <div class="flex-1 flex items-center justify-center px-4">
+            <div class="text-center max-w-4xl">
+                <!-- Welcome Title -->
+                <h1 class="text-5xl md:text-6xl font-bold text-white mb-8 drop-shadow-2xl">
+                    WELCOME TO MALAWI SECONDARY SCHOOL GRANT MANAGEMENT SYSTEM
+                </h1>
+                
+                <!-- Description -->
+                <div class="text-container rounded-lg p-8 shadow-2xl border border-white border-opacity-30">
+                    <p class="text-lg text-white leading-relaxed">
+                        Manage your school finances with confidence. This system provides a complete budget allocation structure for all 16 POWs, including detailed line items, monthly allocations, category totals, and Malawi standard budget coding, all downloadable for official reference. It also ensures full audit and compliance by maintaining a complete transaction trail and generating key documents such as <strong>GP10 Payment Vouchers</strong>, <strong>Loose Minutes</strong>, and <strong>Payment Receipts</strong> for accountability and grant reporting.
+                    </p>
+                    
+                    <!-- Enter Button -->
+                    <a href="{{ url_for('grant_summary') }}" class="inline-block mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-xl shadow-lg transition">
+                        Enter System
+                    </a>
+                    
+                    <!-- Logout Button -->
+                    <a href="{{ url_for('logout') }}" class="inline-block mt-3 bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg text-base shadow-lg transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="bg-black bg-opacity-70 text-white py-4 px-6">
+            <div class="text-center">
+                <p class="font-bold text-lg mb-2">DEVELOPED BY RN-LAB-TECH-SOLUTIONS</p>
+                <p class="text-sm">Contact developer on</p>
+                <div class="flex justify-center gap-6 mt-2 text-sm">
+                    <span>Call: +265991332952</span>
+                    <span>WhatsApp: +265999630132</span>
+                    <span>Email: robertnsambe@gmail.com</span>
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

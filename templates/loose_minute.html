@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>LOOSE MINUTE - {{ debit.supplierName }}</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            padding: 15px;
+            line-height: 1.2;
+            max-width: 800px;
+            margin: auto;
+            color: #000;
+            font-size: 13px;
+        }
+
+        .header {
+            text-align: center;
+            font-weight: bold;
+            text-decoration: underline;
+            font-size: 1.4em;
+            margin-bottom: 25px;
+        }
+
+        .info-block {
+            margin-bottom: 10px;
+        }
+
+        .subject {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 15px 0;
+            text-decoration: underline;
+        }
+
+        .body-text {
+            margin-bottom: 12px;
+            text-align: justify;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 8px 0;
+        }
+
+        th,
+        td {
+            border: 1px solid black;
+            padding: 5px;
+            text-align: left;
+            font-size: 11px;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .footer {
+            margin-top: 15px;
+        }
+
+        .signature-section {
+            margin-top: 20px;
+        }
+
+        .sig-line {
+            width: 250px;
+            border-top: 1px dotted black;
+            margin-bottom: 5px;
+        }
+
+
+        .official-footer {
+            margin-top: 20px;
+            font-size: 9px;
+            color: #666;
+            text-align: center;
+            font-style: italic;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 1cm 1.5cm 0.5cm 1.5cm;
+            }
+
+            .official-footer {
+                position: absolute;
+                bottom: 0.3cm;
+                left: 0;
+                right: 0;
+                text-align: center;
+                font-size: 9px;
+                color: #666;
+                padding: 0;
+                margin: 0;
+                border: none;
+                background: white;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            body {
+                padding: 0;
+                margin: 0;
+                font-size: 15px;
+                line-height: 1.8;
+            }
+
+            .header {
+                font-size: 18px;
+                margin-bottom: 20px;
+            }
+
+            .info-block {
+                margin-bottom: 14px;
+                font-size: 15px;
+            }
+
+            .subject {
+                margin: 16px 0;
+                font-size: 15px;
+            }
+
+            .body-text {
+                margin-bottom: 14px;
+                font-size: 15px;
+            }
+
+            table {
+                margin: 12px 0;
+            }
+
+            th,
+            td {
+                padding: 6px;
+                font-size: 14px;
+            }
+
+            .footer {
+                margin-top: 18px;
+                font-size: 15px;
+            }
+
+            .signature-section {
+                margin-top: 22px;
+                font-size: 15px;
+            }
+
+            table,
+            tr,
+            td,
+            th {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="window.print()" class="no-print"
+        style="margin-bottom: 30px; padding: 10px 20px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+        <i class="fas fa-print mr-2"></i> Print Loose Minute
+    </button>
+
+    <div style="text-align: center; margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 10px;">
+        <img src="{{ url_for('static', filename='images/Malawi Government logo.png') }}" alt="Malawi Government" style="height: 1.5cm; width: auto;">
+    </div>
+    
+    <div class="header">LOOSE MINUTE NO: {{ debit.looseMinuteNumber or '0001' }}</div>
+
+    <div class="info-block">
+        <div><strong>To:</strong> The Head Teacher,</div>
+        <div style="font-weight: bold;">{{ budget.schoolName }}</div>
+        <br>
+        <div><strong>Date:</strong> {{ debit.date }}</div>
+    </div>
+
+    {# Check if this is an Allowance based on subItemDescription #}
+    {% set is_allowance = 'allowance' in debit.subItemDescription|lower or 'subsistence' in
+    debit.subItemDescription|lower %}
+
+    {% if is_allowance %}
+    <!-- ALLOWANCE FORMAT -->
+    <div class="subject">
+        PAYMENT OF ALLOWANCES FOR THE {{ debit.description.upper() }}
+    </div>
+
+    <div class="body-text">
+        I write to respectfully seek approval from your office to utilize Grant funds for the month of
+        <strong>{{ debit.month }}</strong> for the <strong>{{ debit.description }}</strong>.
+    </div>
+
+    <p>The distribution list is as follows:</p>
+    <table>
+        <thead>
+            <tr>
+                <th>NAME OF OFFICER</th>
+                <th>POSITION</th>
+                <th>NO. OF NIGHTS</th>
+                <th>GRADE</th>
+                <th>RATE</th>
+                <th>TOTAL MWK</th>
+                <th>Empl. No:</th>
+                <th>BANK</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ debit.supplierName }}</td>
+                <td>{{ debit.position }}</td>
+                <td style="text-align: center;">-</td>
+                <td style="text-align: center;">-</td>
+                <td style="text-align: right;">-</td>
+                <td style="text-align: right; font-weight: bold;">K{{ "{:,.2f}".format(debit.amount) }}</td>
+                <td>-</td>
+                <td>-</td>
+            </tr>
+        </tbody>
+    </table>
+
+    {% else %}
+    <!-- GENERAL PROCUREMENT FORMAT -->
+    <div class="subject">
+        RE: {{ debit.description.upper() }}
+    </div>
+
+    <div class="body-text">
+        Madam / Sir,<br><br>
+        I write to respectfully seek approval from your office to utilize Grant funds for the month of
+        <strong>{{ debit.month }}</strong> under the <strong>{{ budget.financialYear }}</strong> Financial Year,
+        amounting to <strong>{{ debit.amountWords }} (MWK {{ "{:,.2f}".format(debit.amount) }})</strong>.
+    </div>
+
+    <div class="body-text">
+        The funds will be used for the <strong>{{ debit.description }}</strong>.
+    </div>
+
+    <p>Below is a summary of the items and amounts:</p>
+    <table style="max-width: 600px;">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th style="text-align: right;">Amount (MWK)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ debit.description }} - {{ debit.supplierName }}</td>
+                <td style="text-align: right;">K{{ "{:,.2f}".format(debit.amount) }}</td>
+            </tr>
+            <tr style="font-weight: bold;">
+                <td>Total</td>
+                <td style="text-align: right;">MWK {{ "{:,.2f}".format(debit.amount) }}</td>
+            </tr>
+        </tbody>
+    </table>
+    {% endif %}
+
+    <div class="footer">
+        Submitted for your information and approval.
+    </div>
+
+    <div class="signature-section">
+        <div class="sig-line"></div>
+        <div><strong>Name:</strong> ............................................</div>
+        <div><strong>Position:</strong> {{ debit.position }}</div>
+        <div><strong>Signature:</strong> ............................................</div>
+    </div>
+
+    <!-- Official System Footer -->
+    <div class="official-footer">
+        This is an Official RN-LAB-TECH- Grant Management System.
+        Generated: <span id="timestamp"></span>
+    </div>
+
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    </script>
+</body>
+
+</html>

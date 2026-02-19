@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Initialize Grant - Grant Management System{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white rounded-lg shadow-xl overflow-hidden mt-10">
+        <div class="bg-blue-600 px-6 py-4">
+            <h2 class="text-xl font-bold text-white">Initialize New Grant</h2>
+            <p class="text-blue-100 text-sm">Set up your school's budget for the financial year.</p>
+        </div>
+
+        <form id="initializeForm" class="p-6 space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">School Name</label>
+                <input type="text" name="schoolName" required
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder="e.g. Lilongwe Secondary School">
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Financial Year</label>
+                <input type="text" name="financialYear" value="{{ financial_year }}" readonly
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-700 font-semibold">
+                <p class="mt-2 text-xs text-gray-500">This is the currently active financial year from Settings.</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Total Grant Received (MWK)</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500">MK</span>
+                    </div>
+                    <input type="number" name="totalGrant" required step="0.01"
+                        class="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                        placeholder="0.00">
+                </div>
+                <p class="mt-2 text-xs text-gray-500">Enter the total amount received from the government.</p>
+            </div>
+
+            <div class="pt-4">
+                <button type="submit"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg shadow-lg transform active:scale-95 transition-all">
+                    Generate Budget Structure
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="mt-8 bg-blue-50 p-4 rounded-lg border border-blue-100">
+        <h3 class="text-sm font-bold text-blue-800 mb-2">What happens next?</h3>
+        <ul class="text-xs text-blue-700 space-y-2">
+            <li>• The system will automatically create the 16 Program of Works (POWs).</li>
+            <li>• All sub-activities and items will be initialized with zero allocation.</li>
+            <li>• You will be redirected to the Budget Allocation page to distribute the grant.</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    document.getElementById('initializeForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        const data = {
+            schoolName: formData.get('schoolName'),
+            financialYear: formData.get('financialYear'),
+            totalGrant: parseFloat(formData.get('totalGrant'))
+        };
+
+        fetch('/initialize_budget', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = "{{ url_for('budget') }}";
+                } else {
+                    alert('Initialization failed: ' + data.error);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error.message);
+            });
+    });
+</script>
+{% endblock %}

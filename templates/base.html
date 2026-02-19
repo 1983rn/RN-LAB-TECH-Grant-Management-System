@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grant Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .sidebar {
+            transition: all 0.3s ease;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 40;
+        }
+
+        .sidebar-closed {
+            transform: translateX(-100%);
+        }
+
+        .main-content {
+            transition: margin-left 0.3s ease;
+            margin-left: 16rem;
+            /* Match sidebar width */
+        }
+
+        .main-content-collapsed {
+            margin-left: 0;
+        }
+
+        @media print {
+            .sidebar {
+                display: none !important;
+            }
+
+            header {
+                display: none !important;
+            }
+
+            .main-content {
+                margin-left: 0 !important;
+                width: 100% !important;
+            }
+
+            body {
+                background: white !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            button {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-sm">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="sidebar w-64 bg-slate-900 text-white flex-shrink-0 border-r border-slate-700">
+            <div class="p-4 flex flex-col h-full">
+                <!-- Malawi Government Logo -->
+                <div class="flex justify-center mb-4">
+                    <img src="{{ url_for('static', filename='images/Malawi Government logo.png') }}"
+                        alt="Malawi Government Logo" class="h-16 w-auto object-contain">
+                </div>
+
+                <h1 class="text-lg font-bold text-blue-400 mb-6 border-b border-slate-700 pb-2 text-center">GRANT MGT
+                    SYSTEM</h1>
+                <nav class="space-y-1">
+                    <a href="{{ url_for('index') }}"
+                        class="flex items-center space-x-2 px-3 py-2 rounded {% if current_page == 'home' %}bg-blue-600{% else %}hover:bg-slate-800{% endif %}">
+                        <i class="fas fa-home w-4"></i>
+                        <span>Home</span>
+                    </a>
+                    <a href="{{ url_for('settings') }}"
+                        class="flex items-center space-x-2 px-3 py-2 rounded {% if current_page == 'settings' %}bg-gray-600{% else %}hover:bg-slate-800{% endif %}">
+                        <i class="fas fa-cog w-4"></i>
+                        <span>Settings</span>
+                    </a>
+                    <a href="{{ url_for('budget') }}"
+                        class="flex items-center space-x-2 px-3 py-2 rounded {% if current_page == 'budget' %}bg-blue-600{% else %}hover:bg-slate-800{% endif %}">
+                        <i class="fas fa-table w-4"></i>
+                        <span>Budget Allocation</span>
+                    </a>
+                    <a href="{{ url_for('credits') }}"
+                        class="flex items-center space-x-2 px-3 py-2 rounded {% if current_page == 'credits' %}bg-green-600{% else %}hover:bg-slate-800{% endif %}">
+                        <i class="fas fa-arrow-up w-4"></i>
+                        <span>Credit Register</span>
+                    </a>
+                    <a href="{{ url_for('debits') }}"
+                        class="flex items-center space-x-2 px-3 py-2 rounded {% if current_page == 'debits' %}bg-red-600{% else %}hover:bg-slate-800{% endif %}">
+                        <i class="fas fa-arrow-down w-4"></i>
+                        <span>Debit Register</span>
+                    </a>
+                    <a href="{{ url_for('tracking') }}"
+                        class="flex items-center space-x-2 px-3 py-2 rounded {% if current_page == 'tracking' %}bg-purple-600{% else %}hover:bg-slate-800{% endif %}">
+                        <i class="fas fa-chart-bar w-4"></i>
+                        <span>Spending Tracking</span>
+                    </a>
+                    <a href="{{ url_for('grant_summary') }}"
+                        class="flex items-center space-x-2 px-3 py-2 rounded {% if current_page == 'dashboard' %}bg-blue-600{% else %}hover:bg-slate-800{% endif %}">
+                        <i class="fas fa-chart-line w-4"></i>
+                        <span>Grant Summary</span>
+                    </a>
+                </nav>
+
+                {% if budget %}
+                <div class="mt-6 p-3 bg-slate-800 rounded">
+                    <h3 class="font-semibold mb-2 text-[10px] text-slate-400">QUICK STATS</h3>
+                    <div class="space-y-1 text-[10px]">
+                        <div>TOTAL GRANT: K{{ "%.0f"|format(budget.totalGrant or 0) }}</div>
+                        <div class="text-green-400">CREDITS: {{ credits|length }}</div>
+                        <div class="text-red-400">DEBITS: {{ debits|length }}</div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Malawi Flag -->
+                <div class="mt-auto pt-4 flex justify-center">
+                    <img src="{{ url_for('static', filename='images/Malawi flag.png') }}" alt="Malawi Flag"
+                        class="h-12 w-auto object-contain">
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content flex-1 overflow-auto bg-white">
+            <!-- Header -->
+            <header class="bg-gray-100 border-b border-gray-300 px-4 py-2">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <button onclick="toggleSidebar()" class="text-gray-600 hover:text-black">
+                            <i class="fas fa-bars text-lg"></i>
+                        </button>
+                        <h2 class="text-sm font-bold text-gray-800">
+                            {% block title %}GRANT MANAGEMENT SYSTEM{% endblock %}
+                        </h2>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="text-xs font-bold text-gray-700">FY: {{ financial_year }}</span>
+                        <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition">
+                            <i class="fas fa-sign-out-alt mr-1"></i>Logout
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="p-0">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/logout';
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.querySelector('.main-content');
+
+            sidebar.classList.toggle('sidebar-closed');
+            mainContent.classList.toggle('main-content-collapsed');
+        }
+
+        function showNotification(message, type = 'success') {
+            // Create a simple notification system
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Simple print function for PDF generation
+        function printElement(elementId, reportTitle) {
+            try {
+                // Use browser's native print with custom title
+                const originalTitle = document.title;
+                document.title = reportTitle || 'Report';
+                
+                // Add a small delay to ensure the title change is processed
+                setTimeout(() => {
+                    window.print();
+                    document.title = originalTitle;
+                    showNotification('Print dialog opened successfully');
+                }, 100);
+            } catch (error) {
+                console.error('Print error:', error);
+                showNotification('Print failed: ' + error.message, 'error');
+            }
+        }
+
+        // Enhanced print function that works with or without element ID
+        function printPage(reportTitle) {
+            try {
+                const originalTitle = document.title;
+                document.title = reportTitle || document.title;
+                
+                setTimeout(() => {
+                    window.print();
+                    document.title = originalTitle;
+                    showNotification('Print dialog opened - Use your browser\'s print settings to save as PDF');
+                }, 100);
+            } catch (error) {
+                console.error('Print error:', error);
+                showNotification('Print failed: ' + error.message, 'error');
+            }
+        }
+    </script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+
+</html>

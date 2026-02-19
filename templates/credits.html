@@ -1,0 +1,419 @@
+{% extends "base.html" %}
+
+{% block title %}Credit Register{% endblock %}
+
+{% block content %}
+<!-- Print Header (hidden on screen, visible on print) -->
+<div class="print-header" style="display: none;">
+    <img src="{{ url_for('static', filename='images/Malawi Government logo.png') }}" alt="Malawi Government">
+    <h1>Credit Register</h1>
+    <div class="school-info">{{ (settings.ministry if settings else 'NANJATI CDSS') }} | Financial Year: {{ financial_year }}</div>
+</div>
+
+<style>
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 1cm;
+        }
+
+        /* Print Header */
+        body::before {
+            content: "";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: white;
+            border-bottom: 2px solid #000;
+            z-index: 1000;
+        }
+
+        .print-header {
+            display: block !important;
+            position: fixed;
+            top: 10px;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            z-index: 1001;
+            padding: 0 20px;
+        }
+
+        .print-header img {
+            height: 40px;
+            float: left;
+            margin-top: 5px;
+        }
+
+        .print-header h1 {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 5px 0;
+            line-height: 1.2;
+        }
+
+        .print-header .school-info {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        /* Adjust content for header */
+        .max-w-full {
+            margin-top: 90px !important;
+        }
+
+        /* Hide scrollbars */
+        body {
+            overflow: visible !important;
+        }
+
+        * {
+            overflow: visible !important;
+        }
+
+        .overflow-x-auto {
+            overflow: visible !important;
+            max-height: none !important;
+        }
+
+        ::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        button {
+            display: none !important;
+        }
+
+        .bg-white {
+            border: none !important;
+        }
+
+        table {
+            font-size: 11px;
+        }
+
+        th,
+        td {
+            padding: 6px !important;
+        }
+    }
+</style>
+<div class="max-w-full">
+    <!-- Header -->
+    <div class="bg-white p-4 border-b border-gray-300">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Credit Register (Monthly Allocation)</h2>
+                <p class="text-gray-500 text-sm mt-1">Allocate received GRANT funds to budget items for specific months.
+                </p>
+            </div>
+            <div class="space-x-2 no-print">
+                <button onclick="printPage('Credit Register')"
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-print mr-2"></i>Print Register
+                </button>
+                <button onclick="showAddCreditModal()"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-plus mr-2"></i>Add Monthly Credit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4 px-4">
+        <div class="bg-white p-4 border-l-4 border-green-500 border border-gray-200">
+            <h3 class="text-sm font-medium text-gray-500 uppercase">Annual Budget Total</h3>
+            <p class="text-2xl font-bold text-gray-900">K{{
+                "{:,.2f}".format(budget['items']|sum(attribute='totalAllocation') if budget else 0) }}</p>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <h3 class="text-sm font-medium text-gray-500 uppercase">Total Credits Received</h3>
+            <p class="text-2xl font-bold text-gray-900">K{{ "{:,.2f}".format(total_credits_amount) }}</p>
+        </div>
+        <div class="bg-white p-4 border-l-4 border-yellow-500 border border-gray-200">
+            <h3 class="text-sm font-medium text-gray-500 uppercase">Uncredited Budget</h3>
+            <p class="text-2xl font-bold text-gray-900">K{{
+                "{:,.2f}".format((budget['items']|sum(attribute='totalAllocation') if budget else 0) -
+                total_credits_amount) }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Credits Table -->
+    <div class="bg-white border-t border-gray-200" id="creditsTable">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
+                            Received</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Month
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Allocations</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Remarks</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if credits %}
+                    {% for credit in credits %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ credit.date }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-blue-600">{{ credit.month }}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            <ul class="space-y-1">
+                                {% set month_total = 0 %}
+                                {% for item in credit.lineItems %}
+                                <li>
+                                    <span class="font-mono text-gray-500 text-xs">{{ item.code }}</span>
+                                    {{ item.subItemDescription }}:
+                                    <span class="font-semibold">K{{ "{:,.2f}".format(item.amount) }}</span>
+                                    {% set month_total = month_total + item.amount %}
+                                </li>
+                                {% endfor %}
+                                Total: K{{ "{:,.2f}".format(credit.lineItems|sum(attribute='amount')) }}
+                                </li>
+                            </ul>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-500 italic">{{ credit.remarks }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                            <button onclick="deleteCredit('{{ credit.id }}')" class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                            <i class="fas fa-arrow-up text-4xl mb-4 text-gray-300"></i>
+                            <p class="text-lg">No monthly credits recorded yet</p>
+                            <p class="text-sm mt-2">Add a credit when you receive monthly grant funding.</p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Credit Modal -->
+<div id="addCreditModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 p-8">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-6">Allocate Monthly Credit</h3>
+            <form id="addCreditForm">
+                <input type="hidden" name="financialYear" value="{{ financial_year }}">
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date Received</label>
+                        <input type="date" name="date" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Target Month</label>
+                        <select name="month" id="creditMonth" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">Select Month</option>
+                            <option value="April">April</option>
+                            <option value="May">May</option>
+                            <option value="June">June</option>
+                            <option value="July">July</option>
+                            <option value="August">August</option>
+                            <option value="September">September</option>
+                            <option value="October">October</option>
+                            <option value="November">November</option>
+                            <option value="December">December</option>
+                            <option value="January">January</option>
+                            <option value="February">February</option>
+                            <option value="March">March</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Remarks</label>
+                        <input type="text" name="remarks" placeholder="Optional notes"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <h4 class="font-semibold text-gray-800 mb-2 flex justify-between items-center">
+                        Budget Item Allocations
+                        <span id="creditTotalCounter" class="text-green-600 font-bold">Total: K0.00</span>
+                    </h4>
+                    <div class="max-h-96 overflow-y-auto border border-gray-100 rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Sub Item
+                                        Description</th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Total Budgeted
+                                    </th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Allocated to Date
+                                    </th>
+                                    <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">This Month's
+                                        Credit</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                {% if budget %}
+                                {% for item in budget['items'] %}
+                                <tr class="item-row">
+                                    <td class="px-4 py-2 text-xs">
+                                        <div class="font-semibold">{{ item.subItemDescription }}</div>
+                                        <div class="text-gray-500 font-mono">{{ item.code }}</div>
+                                    </td>
+                                    <td class="px-4 py-2 text-xs text-right text-gray-500">
+                                        K{{ "{:,.2f}".format(item.totalAllocation) }}
+                                    </td>
+                                    <td class="px-4 py-2 text-xs text-right text-gray-500">
+                                        {# Calculate total allocated to date for this item #}
+                                        {% set item_allocated = 0 %}
+                                        {% for c in credits %}
+                                        {% for li in c.lineItems %}
+                                        {% if li.itemId == item.id %}
+                                        {% set item_allocated = item_allocated + li.amount %}
+                                        {% endif %}
+                                        {% endfor %}
+                                        {% endfor %}
+                                        K{{ "{:,.2f}".format(item_allocated) }}
+                                    </td>
+                                    <td class="px-4 py-2 text-right">
+                                        <input type="number" data-item-id="{{ item.id }}"
+                                            data-item-desc="{{ item.subItemDescription }}"
+                                            data-item-code="{{ item.code }}" step="0.01"
+                                            class="credit-input w-28 p-1 text-right text-xs border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
+                                            oninput="updateCreditTotal()">
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeAddCreditModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-green-600 border border-transparent rounded-md text-white hover:bg-green-700">
+                        Record Credits
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showAddCreditModal() {
+        document.getElementById('addCreditModal').classList.remove('hidden');
+    }
+
+    function closeAddCreditModal() {
+        document.getElementById('addCreditModal').classList.add('hidden');
+        // Reset inputs
+        document.querySelectorAll('.credit-input').forEach(i => i.value = '');
+        updateCreditTotal();
+    }
+
+    function updateCreditTotal() {
+        let total = 0;
+        document.querySelectorAll('.credit-input').forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        document.getElementById('creditTotalCounter').textContent = 'Total: K' + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function deleteCredit(creditId) {
+        if (confirm('Delete this credit record? This will reduce the available funds in the debit register.')) {
+            fetch('/delete_credit/' + creditId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    financialYear: '{{ financial_year }}'
+                })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification('Credit deleted successfully');
+                        setTimeout(() => window.location.reload(), 1000);
+                    } else {
+                        showNotification('Failed to delete: ' + data.error, 'error');
+                    }
+                });
+        }
+    }
+
+    document.getElementById('addCreditForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        const lineItems = [];
+        document.querySelectorAll('.credit-input').forEach(input => {
+            const val = parseFloat(input.value) || 0;
+            if (val > 0) {
+                lineItems.push({
+                    itemId: input.getAttribute('data-item-id'),
+                    subItemDescription: input.getAttribute('data-item-desc'),
+                    code: input.getAttribute('data-item-code'),
+                    amount: val
+                });
+            }
+        });
+
+        if (lineItems.length === 0) {
+            alert('Please enter at least one credit amount.');
+            return;
+        }
+
+        const creditData = {
+            date: formData.get('date'),
+            month: formData.get('month'),
+            remarks: formData.get('remarks'),
+            financialYear: formData.get('financialYear'),
+            lineItems: lineItems
+        };
+
+        fetch('/add_credit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(creditData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Credit allocated successfully');
+                    closeAddCreditModal();
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showNotification('Failed: ' + data.error, 'error');
+                }
+            })
+            .catch(error => alert('Error: ' + error.message));
+    });
+</script>
+{% endblock %}

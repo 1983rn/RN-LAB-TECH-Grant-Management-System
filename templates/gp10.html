@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Payment Voucher GP10 - {{ debit.supplierName }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 15px;
+            font-size: 12px;
+            max-width: 95%;
+            margin: 0 auto;
+        }
+
+        .voucher-container {
+            border: 2px solid black;
+            max-width: 900px;
+            margin: auto;
+        }
+
+        .row {
+            display: flex;
+            border-bottom: 1px solid black;
+            min-height: 30px;
+        }
+
+        .row:last-child {
+            border-bottom: none;
+        }
+
+        .col {
+            border-right: 1px solid black;
+            padding: 5px;
+        }
+
+        .col:last-child {
+            border-right: none;
+        }
+
+        .header-row {
+            font-weight: bold;
+            text-align: center;
+            justify-content: space-between;
+            padding: 5px 15px;
+        }
+
+        .box-title {
+            font-weight: bold;
+            font-size: 10px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .field-content {
+            min-height: 40px;
+            font-size: 13px;
+        }
+
+        .table-header {
+            font-weight: bold;
+            background-color: #f0f0f0;
+            text-align: center;
+        }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+        }
+
+        .footer-col {
+            border-right: 1px solid black;
+            padding: 10px;
+        }
+
+        .account-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .account-table th,
+        .account-table td {
+            border: 1px solid black;
+            font-size: 9px;
+            padding: 2px;
+            text-align: center;
+        }
+
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0.8cm 0.5cm 0.8cm 2.5cm;
+            }
+
+            .no-print {
+                display: none;
+            }
+
+            body {
+                padding: 0;
+                margin: 0 auto;
+                font-size: 14px;
+                max-width: 100%;
+            }
+
+            .voucher-container {
+                width: 98%;
+                border: 2px solid black;
+                max-width: 98%;
+                margin: 0 auto;
+            }
+
+            .row {
+                min-height: auto;
+            }
+
+            .col {
+                padding: 8px;
+            }
+
+            .field-content {
+                min-height: 35px;
+                font-size: 15px;
+            }
+
+            .account-table th,
+            .account-table td {
+                font-size: 13px;
+                padding: 6px;
+            }
+
+            .footer-grid {
+                font-size: 13px;
+                line-height: 1.6;
+            }
+
+            .footer-col {
+                padding: 10px;
+            }
+            
+            .box-title {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <button onclick="window.print()" class="no-print" style="margin-bottom: 20px; padding: 10px; cursor: pointer;">Print
+        Voucher (GP10)</button>
+
+    <div class="voucher-container">
+        <!-- Logo and Header -->
+        <div class="row" style="border-bottom: 2px solid black; padding: 8px 15px; display: flex; align-items: center; justify-content: space-between;">
+            <img src="{{ url_for('static', filename='images/Malawi Government logo.png') }}" alt="Malawi Government" style="height: 1.5cm; width: auto;">
+            <span style="font-weight: bold; font-size: 14px;">PAYMENT VOUCHER NO: {{ debit.documentNumber or '0001' }}</span>
+            <span style="font-weight: bold; font-size: 14px;">GP10</span>
+        </div>
+
+        <!-- Section 1: Payee and Amount Words -->
+        <div class="row">
+            <div class="col" style="flex: 1;">
+                <span class="box-title">Emp. No.</span>
+                <div class="field-content"></div>
+            </div>
+            <div class="col" style="flex: 2;">
+                <span class="box-title">CASH PAYMENT RECEIPT</span>
+                <div class="field-content"></div>
+            </div>
+        </div>
+
+        <div class="row" style="min-height: 100px;">
+            <div class="col" style="flex: 1;">
+                <span class="box-title">Name of the supplier, service provider or person receiving the funds</span>
+                <div class="field-content" style="font-weight: bold;">{{ debit.supplierName }}</div>
+                <div style="margin-top: 20px;"><strong>FOR:</strong> {{ budget.schoolName }}</div>
+            </div>
+            <div class="col" style="flex: 1;">
+                <span class="box-title">Received the sum of (amount used in words)</span>
+                <div class="field-content" style="font-style: italic;">{{ debit.amountWords }}</div>
+                <div style="margin-top: 20px;"><strong>PAID BY CHEQUE NO......................................</strong>
+                </div>
+                <div style="margin-top: 10px; text-align: right; border-top: 1px solid black; padding-top: 5px;">
+                    Signature of Recipient</div>
+            </div>
+        </div>
+
+        <!-- Section 2: Description and Itemized -->
+        <div class="row table-header">
+            <div class="col" style="flex: 3;">Description of the payment</div>
+            <div class="col" style="flex: 1;">K</div>
+            <div class="col" style="flex: 0.3;">T</div>
+        </div>
+        <div class="row" style="min-height: 300px;">
+            <div class="col" style="flex: 3; position: relative;">
+                <div style="margin-bottom: 15px;">
+                    BEING PAYMENT TO THE ABOVE NAMED ADDRESSEE FOR {{ debit.description }} AS PER ATTACHED SUPPORTING DOCUMENTS
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>{{ debit.subItemDescription }} - {{ debit.supplierName }} (MWK {{
+                        "{:,.2f}".format(debit.amount) }})</span>
+                </div>
+                <div style="position: absolute; bottom: 5px; left: 5px; font-weight: bold;">Total used</div>
+            </div>
+            <div class="col text-right" style="flex: 1; font-weight: bold; font-size: 14px; display: flex; flex-direction: column; justify-content: space-between;">
+                <div style="padding-top: 5px; border-bottom: 1px solid black; padding-bottom: 3px;">{{ "{:,.2f}".format(debit.amount).split('.')[0] }}</div>
+                <div style="padding-bottom: 5px; border-top: 1px solid black; padding-top: 3px;">{{ "{:,.2f}".format(debit.amount).split('.')[0] }}</div>
+            </div>
+            <div class="col text-center" style="flex: 0.3; font-weight: bold; display: flex; flex-direction: column; justify-content: space-between;">
+                <div style="padding-top: 5px; border-bottom: 1px solid black; padding-bottom: 3px;">{{ "{:,.2f}".format(debit.amount).split('.')[1] }}</div>
+                <div style="padding-bottom: 5px; border-top: 1px solid black; padding-top: 3px;">{{ "{:,.2f}".format(debit.amount).split('.')[1] }}</div>
+            </div>
+        </div>
+
+        <!-- Section 3: Authority -->
+        <div class="row" style="padding: 5px; font-size: 10px;">
+            <div style="width: 100%;">
+                <strong>Treasury Authority</strong><br>
+                I certify that the voucher is passed for payment in accordance with Treasury Instructions, that goods or
+                services have been acquired for public purposes, and that the expenditure is a proper charge to public
+                funds, and has not been previously paid.
+            </div>
+        </div>
+
+        <div class="footer-grid">
+            <div class="footer-col" style="font-size: 10px; line-height: 1.8;">
+                Compiled By: <strong>{{ settings.compiledBy or '............................................'
+                    }}</strong><br>
+                <br>
+                Signature ............................................<br>
+                <br>
+                Entered in Vote Book by: <strong>{{ settings.enteredBy or '.......................' }}</strong><br>
+                <br>
+                Signature ............................................
+            </div>
+            <div class="footer-col" style="font-size: 10px; line-height: 1.8; border-right: none;">
+                Name of Authorizing Officer: <strong>{{ settings.authorizingOfficer or
+                    '...........................................' }}</strong><br>
+                Signature of Authorizing Officer: ...........................................<br>
+                Appointment: <strong>{{ settings.authorizingAppointment or
+                    '.....................................................................' }}</strong><br>
+                Name of Counter Sign: <strong>{{ settings.counterSign or
+                    '........................................................' }}</strong><br>
+                Counter Signature .............................................................<br>
+                Appointment: <strong>{{ settings.counterAppointment or
+                    '.....................................................................' }}</strong><br>
+                Ministry / Department: <strong>{{ settings.ministry or '............................................................................' }}</strong><br>
+                Address: <strong>{{ settings.schoolAddress or '............................................................................' }}</strong><br>
+                Date: <strong>{{ debit.date }}</strong>
+            </div>
+        </div>
+
+        <div class="row" style="font-size: 9px; padding: 2px;">
+            <div class="col" style="flex: 1;">Checked by............................................</div>
+            <div class="col" style="flex: 1;">Passed by............................................</div>
+        </div>
+
+        <!-- Section 4: Account Numbers -->
+        <div class="row">
+            <table class="account-table">
+                <thead>
+                    <tr>
+                        <th colspan="12">ACCOUNT NUMBER</th>
+                        <th colspan="2">AMOUNT</th>
+                    </tr>
+                    <tr>
+                        <th style="width: 50px;">Sector</th>
+                        <th>Mtry</th>
+                        <th>Dep</th>
+                        <th>Budget Type</th>
+                        <th>Cost Centre</th>
+                        <th>Prog</th>
+                        <th>Sub-Prog.</th>
+                        <th>Don</th>
+                        <th>Pro</th>
+                        <th>Item</th>
+                        <th>Item</th>
+                        <th>Station No.</th>
+                        <th>Vouch No.</th>
+                        <th>Debit K</th>
+                        <th>T</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="12"
+                            style="text-align: left; font-family: monospace; font-size: 11px; padding: 5px;">
+                            250291161020241/0000010100000(<span style="background: yellow;">{{ debit.code }}</span>)
+                        </td>
+                        <td style="font-weight: bold;">{{ "{:,.2f}".format(debit.amount).split('.')[0] }}</td>
+                        <td>{{ "{:,.2f}".format(debit.amount).split('.')[1] }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="12" style="text-align: right; font-weight: bold;">Total used</td>
+                        <td style="font-weight: bold;">{{ "{:,.2f}".format(debit.amount).split('.')[0] }}</td>
+                        <td>{{ "{:,.2f}".format(debit.amount).split('.')[1] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Official System Footer -->
+    <div style="margin-top: 20px; font-size: 10px; color: #666; text-align: center; font-style: italic;">
+        This is an Official RN-LAB-TECH- Grant Management System.
+        Generated on: <span id="timestamp"></span> | Payee: <strong>{{ debit.supplierName }}</strong>
+    </div>
+
+    <script>
+        document.getElementById('timestamp').textContent = new Date().toLocaleString();
+    </script>
+</body>
+
+</html>

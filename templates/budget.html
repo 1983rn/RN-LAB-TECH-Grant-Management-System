@@ -1,0 +1,738 @@
+{% extends "base.html" %}
+
+{% block title %}Budget Allocation - v2.0{% endblock %}
+
+{% block content %}
+<!-- Print Header (hidden on screen, visible on print) -->
+<div class="print-header" style="display: none;">
+    <img src="{{ url_for('static', filename='images/Malawi Government logo.png') }}" alt="Malawi Government">
+    <h1>Budget Allocation</h1>
+    <div class="school-info">{{ (settings.ministry if settings else 'NANJATI CDSS') }} | Financial Year: {{ financial_year }}</div>
+</div>
+
+<div class="max-w-full">
+    <style>
+        .sticky-col {
+            position: sticky !important;
+            z-index: 10;
+        }
+
+        .sticky-col-1 {
+            left: 0;
+        }
+
+        .sticky-col-2 {
+            left: 160px;
+        }
+
+        .sticky-col-3 {
+            left: 0;
+        }
+
+        /* Ensure headers stay above sticky columns */
+        thead th.sticky-col {
+            z-index: 30 !important;
+        }
+
+        /* Maintain background colors for sticky columns */
+        tbody td.sticky-col {
+            background-color: white;
+        }
+
+        tr:hover td.sticky-col {
+            background-color: #f9fafb;
+            /* gray-50 */
+        }
+
+        thead th {
+            position: sticky !important;
+            top: 0;
+            z-index: 20;
+        }
+
+        /* Offset for second header row */
+        .header-row-2 th {
+            top: 40px !important;
+        }
+
+        @media print {
+            /* ========================================
+               BUDGET ALLOCATION PRINT LAYOUT v2.0
+               CRITICAL: Column widths optimized for A3 landscape
+               Month order: April-March (Malawi FY)
+               ======================================== */
+            @page {
+                size: A3 landscape;
+                margin: 0.5cm;
+            }
+
+            /* Print Header */
+            body::before {
+                content: "";
+                display: block;
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 80px;
+                background: white;
+                border-bottom: 2px solid #000;
+                z-index: 1000;
+            }
+
+            .print-header {
+                display: block !important;
+                position: fixed;
+                top: 10px;
+                left: 0;
+                right: 0;
+                height: 60px;
+                background: white;
+                z-index: 1001;
+                padding: 0 20px;
+            }
+
+            .print-header img {
+                height: 40px;
+                float: left;
+                margin-top: 5px;
+            }
+
+            .print-header h1 {
+                text-align: center;
+                font-size: 18px;
+                font-weight: bold;
+                margin: 5px 0;
+                line-height: 1.2;
+            }
+
+            .print-header .school-info {
+                text-align: center;
+                font-size: 12px;
+                margin-top: 2px;
+            }
+
+            /* Adjust content for header */
+            .max-w-full {
+                margin-top: 90px !important;
+            }
+
+            /* Hide scrollbars */
+            body {
+                overflow: visible !important;
+            }
+
+            * {
+                overflow: visible !important;
+            }
+
+            .overflow-x-auto {
+                overflow: visible !important;
+                max-height: none !important;
+            }
+
+            /* Remove scrollbar space */
+            ::-webkit-scrollbar {
+                display: none !important;
+                width: 0 !important;
+                height: 0 !important;
+            }
+
+            button {
+                display: none !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .bg-white {
+                border: none !important;
+            }
+
+            body {
+                margin: 0;
+                padding: 0;
+            }
+
+            .max-w-full {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            /* Hide header info during print */
+            .bg-white.p-4.border-b {
+                display: none !important;
+            }
+
+            /* Adjust table container for print */
+            .overflow-x-auto {
+                overflow: visible !important;
+                max-height: none !important;
+            }
+
+            /* Hide scrollbars */
+            body {
+                overflow: hidden !important;
+            }
+
+            /* Hide rows with no allocation */
+            tbody tr {
+                page-break-inside: avoid;
+            }
+
+            tbody tr:has(.annual-allocation[value="0"]) {
+                display: none !important;
+            }
+
+            table {
+                font-size: 8px !important;
+                width: 100% !important;
+                table-layout: fixed !important;
+                border-collapse: collapse !important;
+            }
+
+            th,
+            td {
+                padding: 2px !important;
+                overflow: visible !important;
+                text-overflow: clip !important;
+                border: 1px solid #666 !important;
+            }
+
+            /* Remove sticky positioning for print */
+            .sticky-col {
+                position: static !important;
+            }
+
+            thead th {
+                position: static !important;
+                background-color: #1f2937 !important;
+                color: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                font-weight: bold !important;
+            }
+
+            tfoot {
+                position: static !important;
+                background-color: #e5e7eb !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                font-weight: bold !important;
+            }
+
+            /* Adjust column widths for print - CRITICAL LAYOUT FIX */
+            td:nth-child(1),
+            th:nth-child(1),
+            td:nth-child(2),
+            th:nth-child(2) {
+                display: none !important;
+            }
+
+            /* Sub Item Description - REDUCED WIDTH WITH WRAPPING */
+            td:nth-child(3),
+            th:nth-child(3) {
+                width: 10% !important;
+                max-width: 10% !important;
+                min-width: 10% !important;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                word-break: break-word !important;
+                line-height: 1.2 !important;
+                font-size: 7px !important;
+                padding: 2px !important;
+            }
+
+            /* Annual Allocation - COMPACT */
+            td:nth-child(4),
+            th:nth-child(4) {
+                width: 3.5% !important;
+                max-width: 3.5% !important;
+                min-width: 3.5% !important;
+                font-size: 7px !important;
+                padding: 2px !important;
+            }
+
+            /* Monthly columns - INCREASED WIDTH FOR VISIBILITY */
+            td:nth-child(5), th:nth-child(5),
+            td:nth-child(6), th:nth-child(6),
+            td:nth-child(7), th:nth-child(7),
+            td:nth-child(8), th:nth-child(8),
+            td:nth-child(9), th:nth-child(9),
+            td:nth-child(10), th:nth-child(10),
+            td:nth-child(11), th:nth-child(11),
+            td:nth-child(12), th:nth-child(12),
+            td:nth-child(13), th:nth-child(13),
+            td:nth-child(14), th:nth-child(14),
+            td:nth-child(15), th:nth-child(15),
+            td:nth-child(16), th:nth-child(16) {
+                width: 6% !important;
+                max-width: 6% !important;
+                min-width: 6% !important;
+                font-size: 8px !important;
+                font-weight: 700 !important;
+                text-align: center !important;
+                padding: 2px 1px !important;
+            }
+
+            /* Total and Balance columns - COMPACT */
+            td:nth-child(17),
+            th:nth-child(17),
+            td:nth-child(18),
+            th:nth-child(18) {
+                width: 3.5% !important;
+                max-width: 3.5% !important;
+                min-width: 3.5% !important;
+                font-weight: bold !important;
+                font-size: 7px !important;
+                padding: 2px !important;
+            }
+
+            input {
+                border: none !important;
+                padding: 0 !important;
+                width: 100% !important;
+                font-size: 7px !important;
+                text-align: center !important;
+                background: transparent !important;
+                font-weight: 700 !important;
+            }
+
+            /* Ensure all content fits on page */
+            .bg-white.border-b.border-gray-200 {
+                border: none !important;
+                page-break-inside: avoid;
+            }
+
+            /* Print color adjustments */
+            .bg-blue-50 {
+                background-color: #eff6ff !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .bg-gray-50 {
+                background-color: #f9fafb !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .bg-gray-200 {
+                background-color: #e5e7eb !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .bg-gray-300 {
+                background-color: #d1d5db !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            .text-blue-600 {
+                color: #2563eb !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+    {% if not budget %}
+    <div class="bg-white rounded-lg shadow-md p-8 text-center">
+        <i class="fas fa-table text-6xl text-gray-400 mb-4"></i>
+        <h2 class="text-2xl font-bold text-gray-700 mb-2">No Budget Found</h2>
+        <p class="text-gray-500 mb-6">Initialize a budget for {{ financial_year }} to get started.</p>
+        <a href="{{ url_for('initialize_budget') }}?financial_year={{ financial_year }}"
+            class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md inline-block">
+            <i class="fas fa-plus mr-2"></i>Initialize Budget
+        </a>
+    </div>
+    {% else %}
+    <!-- Budget Header -->
+    <div class="bg-white p-4 border-b border-gray-300">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-900">Grant Budgeting - {{ budget.financialYear }}</h2>
+            <div class="space-x-2 no-print">
+                <button onclick="window.location.href='/export_budget_excel'"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-file-excel mr-2"></i>Download Excel
+                </button>
+                <button onclick="saveAllChanges()"
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-save mr-2"></i>Save All Changes
+                </button>
+                <button onclick="editBudgetInfo()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-edit mr-2"></i>Edit Grant Info
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-2">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">School Name</label>
+                <div class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md font-semibold">{{ settings.schoolName or budget.schoolName or '' }}</div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Total Grant (MWK)</label>
+                <div class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md font-bold text-blue-600">K{{
+                    "{:,.2f}".format((budget.totalGrant or budget.total_grant or 0)|default(0)) }}</div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Total Budgeted</label>
+                <div id="displayTotalBudgeted"
+                    class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md font-bold text-purple-600">K0.00</div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Remaining to Budget</label>
+                <div id="displayRemainingGrant"
+                    class="px-3 py-2 bg-gray-50 border border-gray-300 rounded-md font-bold">K0.00</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Table -->
+    <div class="bg-white border-b border-gray-200" style="position: relative;">
+        <div class="overflow-x-auto relative" style="overflow-x: scroll !important; max-height: calc(100vh - 250px); position: relative;">
+            <table class="min-w-full divide-y divide-gray-200 relative border-collapse text-sm" id="budgetTable">
+                <thead class="bg-gray-800 text-white sticky top-0 z-20">
+                    <tr>
+                        <th rowspan="2"
+                            class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider border-r border-gray-700 bg-gray-800 no-print">
+                            POW Activity</th>
+                        <th rowspan="2"
+                            class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider border-r border-gray-700 bg-gray-800 no-print">
+                            Sub-Activity</th>
+                        <th rowspan="2"
+                            class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider border-r border-gray-700 sticky-col sticky-col-3 bg-gray-800">
+                            Sub Item Description</th>
+                        <th rowspan="2"
+                            class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider border-r border-gray-700 bg-gray-800">
+                            Annual Allocation</th>
+                        <th colspan="12"
+                            class="px-2 py-2 text-center text-xs font-medium uppercase tracking-wider border-b border-gray-700">
+                            Monthly Allocation</th>
+                        <th rowspan="2"
+                            class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider border-l border-gray-700">
+                            Total Budgeted</th>
+                        <th rowspan="2"
+                            class="px-2 py-2 text-left text-xs font-medium uppercase tracking-wider">Balance
+                        </th>
+                    </tr>
+                    <tr class="bg-gray-700 header-row-2">
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">Apr
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">May
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">Jun
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">Jul
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">Aug
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">Sep
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">Oct
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">Nov
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">Dec
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">Jan
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center border-r border-gray-600">Feb
+                        </th>
+                        <th class="px-2 py-2 text-xs font-medium uppercase text-center">Mar</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in budget['items'] %}
+                    <tr data-item-id="{{ item.id }}" class="hover:bg-gray-50">
+                        <td
+                            class="px-2 py-2 text-sm text-gray-900 border-r w-[140px] min-w-[140px] no-print">
+                            POW {{ item.powNo }}: {{ item.powName }}
+                        </td>
+                        <td
+                            class="px-2 py-2 text-sm text-gray-900 border-r w-[140px] min-w-[140px] no-print">
+                            {{ item.subActivity }}</td>
+                        <td
+                            class="px-2 py-2 text-sm text-gray-900 border-r sticky-col sticky-col-3 w-[200px] min-w-[200px]">
+                            <span class="font-mono text-blue-600 mr-1 text-[10px]">{{ item.code }}</span>
+                            {{ item.subItemDescription }}
+                        </td>
+                        <td class="px-2 py-2 border-r bg-blue-50">
+                            <input type="number"
+                                class="annual-allocation w-20 p-1 text-right text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+                                value="{{ item.totalAllocation }}" oninput="calculateRow(this.closest('tr'))">
+                        </td>
+                        {% for month in ["April", "May", "June", "July", "August", "September", "October", "November",
+                        "December", "January", "February", "March"] %}
+                        <td class="px-1 py-2 border-r">
+                            <input type="number" data-month="{{ month }}"
+                                class="monthly-input w-16 p-1 text-right text-sm border border-gray-200 rounded"
+                                value="{{ item.monthlyAllocations[month]|default(0) if item.monthlyAllocations is defined else 0 }}"
+                                oninput="calculateRow(this.closest('tr'))">
+                        </td>
+                        {% endfor %}
+                        <td class="px-2 py-2 font-semibold text-sm text-right bg-gray-50 border-l border-r">
+                            <span class="row-total">0.00</span>
+                        </td>
+                        <td class="px-2 py-2 font-semibold text-sm text-right">
+                            <span class="row-balance">0.00</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot
+                    class="bg-gray-200 font-bold border-t-4 border-gray-400 shadow-[0_-4px_6px_rgba(0,0,0,0.1)]" style="position: sticky; bottom: 0; z-index: 30;">
+                    <tr class="text-sm">
+                        <td colspan="1" class="px-2 py-3 text-right text-gray-700 sticky-col sticky-col-3 bg-gray-200"
+                            style="left: 0; min-width: 200px; z-index: 15;">GRAND TOTALS (POW 1 - 16):</td>
+                        <td class="px-2 py-3 text-right border-r bg-gray-300">
+                            <span id="grandTotalAnnual" class="text-base">0.00</span>
+                        </td>
+                        {% for month in ["April", "May", "June", "July", "August", "September", "October", "November",
+                        "December", "January", "February", "March"] %}
+                        <td class="px-1 py-3 text-right border-r text-[11px] text-gray-600">
+                            <span id="total-{{ month }}">0.00</span>
+                        </td>
+                        {% endfor %}
+                        <td class="px-2 py-3 text-right border-l border-r bg-gray-100 text-blue-700">
+                            <span id="grandTotalBudgeted" class="text-base">0.00</span>
+                        </td>
+                        <td class="text-right px-2 bg-gray-50">
+                            <span id="grandTotalBalance" class="text-base">0.00</span>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Budget Info Modal -->
+<div id="budgetInfoModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Edit Budget Information</h3>
+            <form id="budgetInfoForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">School Name</label>
+                        <input type="text" name="schoolName" value="{{ budget.schoolName if budget else '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Total Grant Amount (MWK)</label>
+                        <input type="number" name="totalGrant" value="{{ (budget.totalGrant or budget.total_grant or 0) if budget else '' }}"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md" required>
+                    </div>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeBudgetInfoModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-white hover:bg-blue-700">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script id="budget-items-data" type="application/json">
+    {{ budget['items']|tojson|safe if budget else "[]" }}
+</script>
+
+<script>
+    const TOTAL_GRANT = Number("{{ budget.totalGrant if budget else 0 }}");
+    const MONTHS = ["April", "May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March"];
+
+    function editBudgetInfo() {
+        document.getElementById('budgetInfoModal').classList.remove('hidden');
+    }
+
+    function closeBudgetInfoModal() {
+        document.getElementById('budgetInfoModal').classList.add('hidden');
+    }
+
+    function calculateRow(row) {
+        const annualAllocation = parseFloat(row.querySelector('.annual-allocation').value) || 0;
+        const monthlyInputs = row.querySelectorAll('.monthly-input');
+        let rowTotal = 0;
+
+        monthlyInputs.forEach(input => {
+            rowTotal += parseFloat(input.value) || 0;
+        });
+
+        const rowBalance = annualAllocation - rowTotal;
+
+        row.querySelector('.row-total').textContent = rowTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        row.querySelector('.row-balance').textContent = rowBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Update balance color
+        const balanceSpan = row.querySelector('.row-balance');
+        if (rowBalance < 0) {
+            balanceSpan.className = 'row-balance text-red-600';
+        } else if (rowBalance === 0 && annualAllocation > 0) {
+            balanceSpan.className = 'row-balance text-green-600';
+        } else {
+            balanceSpan.className = 'row-balance text-gray-900';
+        }
+
+        calculateGrandTotals();
+    }
+
+    function calculateGrandTotals() {
+        let grandTotalAnnual = 0;
+        let grandTotalBudgeted = 0;
+
+        document.querySelectorAll('tr[data-item-id]').forEach(row => {
+            grandTotalAnnual += parseFloat(row.querySelector('.annual-allocation').value) || 0;
+
+            row.querySelectorAll('.monthly-input').forEach(input => {
+                grandTotalBudgeted += parseFloat(input.value) || 0;
+            });
+        });
+
+        document.getElementById('grandTotalAnnual').textContent = grandTotalAnnual.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('grandTotalBudgeted').textContent = grandTotalBudgeted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        document.getElementById('grandTotalBalance').textContent = (grandTotalAnnual - grandTotalBudgeted).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        // Update Monthly Grand Totals
+        MONTHS.forEach(month => {
+            let monthTotal = 0;
+            document.querySelectorAll(`.monthly-input[data-month="${month}"]`).forEach(input => {
+                monthTotal += parseFloat(input.value) || 0;
+            });
+            document.getElementById(`total-${month}`).textContent = monthTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        });
+
+        // "Total Budgeted" in header reflects the sum of all Annual Allocations
+        document.getElementById('displayTotalBudgeted').textContent = 'K' + grandTotalAnnual.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        const remaining = TOTAL_GRANT - grandTotalAnnual;
+        const remainingEl = document.getElementById('displayRemainingGrant');
+        remainingEl.textContent = 'K' + remaining.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        if (remaining < 0) {
+            remainingEl.className = 'px-3 py-2 bg-gray-50 border border-gray-300 rounded-md font-bold text-red-600';
+        } else {
+            remainingEl.className = 'px-3 py-2 bg-gray-50 border border-gray-300 rounded-md font-bold text-green-600';
+        }
+    }
+
+    function saveAllChanges() {
+        const items = [];
+        document.querySelectorAll('tr[data-item-id]').forEach(row => {
+            const itemId = row.getAttribute('data-item-id');
+            const annualAllocation = parseFloat(row.querySelector('.annual-allocation').value) || 0;
+            const monthlyAllocations = {};
+
+            row.querySelectorAll('.monthly-input').forEach(input => {
+                monthlyAllocations[input.getAttribute('data-month')] = parseFloat(input.value) || 0;
+            });
+
+            // Get original metadata from current budget items to avoid losing it
+            const itemsData = JSON.parse(document.getElementById('budget-items-data').textContent);
+            const originalItem = itemsData.find(i => i.id === itemId);
+
+            items.push({
+                ...originalItem,
+                totalAllocation: annualAllocation,
+                monthlyAllocations: monthlyAllocations
+            });
+        });
+
+        const data = {
+            financialYear: '{{ financial_year }}',
+            items: items
+        };
+
+        showNotification('Saving budget changes...', 'info');
+
+        fetch('/update_budget', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`Server error: ${response.status} - ${text.substring(0, 200)}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    showNotification('Budget saved successfully');
+                } else {
+                    showNotification('Failed to save budget: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Budget save error:', error);
+                showNotification('Error saving budget: ' + error.message, 'error');
+            });
+    }
+
+    // Initialize calculations on load
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('tr[data-item-id]').forEach(row => calculateRow(row));
+    });
+
+    // Handle budget info form submission
+    document.getElementById('budgetInfoForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const budgetData = {
+            financialYear: '{{ financial_year }}',
+            schoolName: formData.get('schoolName'),
+            totalGrant: parseFloat(formData.get('totalGrant'))
+        };
+
+        fetch('/update_budget', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(budgetData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Grant information updated successfully');
+                    closeBudgetInfoModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    showNotification('Failed to update grant: ' + data.error, 'error');
+                }
+            })
+            .catch(error => {
+                showNotification('Error updating grant: ' + error.message, 'error');
+            });
+    });
+</script>
+
+<style>
+    /* Styling for dense table inputs */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        appearance: none;
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type=number] {
+        appearance: textfield;
+        -moz-appearance: textfield;
+    }
+</style>
+{% endblock %}

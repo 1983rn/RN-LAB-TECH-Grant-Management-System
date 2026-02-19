@@ -1,0 +1,459 @@
+{% extends "base.html" %}
+
+{% block title %}Debit Register{% endblock %}
+
+{% block content %}
+<!-- Print Header (hidden on screen, visible on print) -->
+<div class="print-header" style="display: none;">
+    <img src="{{ url_for('static', filename='images/Malawi Government logo.png') }}" alt="Malawi Government">
+    <h1>Debit Register</h1>
+    <div class="school-info">{{ (settings.ministry if settings else 'NANJATI CDSS') }} | Financial Year: {{ financial_year }}</div>
+</div>
+
+<style>
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 1cm;
+        }
+
+        /* Print Header */
+        body::before {
+            content: "";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: white;
+            border-bottom: 2px solid #000;
+            z-index: 1000;
+        }
+
+        .print-header {
+            display: block !important;
+            position: fixed;
+            top: 10px;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            z-index: 1001;
+            padding: 0 20px;
+        }
+
+        .print-header img {
+            height: 40px;
+            float: left;
+            margin-top: 5px;
+        }
+
+        .print-header h1 {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 5px 0;
+            line-height: 1.2;
+        }
+
+        .print-header .school-info {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        /* Adjust content for header */
+        .max-w-full {
+            margin-top: 90px !important;
+        }
+
+        /* Hide scrollbars */
+        body {
+            overflow: visible !important;
+        }
+
+        * {
+            overflow: visible !important;
+        }
+
+        .overflow-x-auto {
+            overflow: visible !important;
+            max-height: none !important;
+        }
+
+        ::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        button {
+            display: none !important;
+        }
+
+        .bg-white {
+            border: none !important;
+        }
+
+        table {
+            font-size: 11px;
+        }
+
+        th,
+        td {
+            padding: 6px !important;
+        }
+
+        a {
+            color: black !important;
+            text-decoration: none !important;
+        }
+    }
+</style>
+<div class="max-w-full">
+    <!-- Header -->
+    <div class="bg-white p-4 border-b border-gray-300">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Debit Register (Spending)</h2>
+                <p class="text-gray-500 text-sm mt-1">Record actual expenditures and generate payment documents.</p>
+            </div>
+            <div class="space-x-2 no-print">
+                <button onclick="printPage('Debit Register')"
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-print mr-2"></i>Print Register
+                </button>
+                <button onclick="showAddDebitModal()"
+                    class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-minus mr-2"></i>Record Expenditure (Debit)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4 px-4">
+        <div class="bg-white p-4 border border-gray-200 border-l-4 border-green-500">
+            <h3 class="text-sm font-medium text-gray-500 uppercase">Total Funds Available (Credited)</h3>
+            <p class="text-2xl font-bold text-gray-900">K{{ "{:,.2f}".format(total_credited) }}</p>
+        </div>
+        <div class="bg-white p-4 border border-gray-200 border-l-4 border-red-500">
+            <h3 class="text-sm font-medium text-gray-500 uppercase">Total Spent to Date</h3>
+            <p class="text-2xl font-bold text-gray-900">K{{ "{:,.2f}".format(total_spent) }}</p>
+        </div>
+    </div>
+
+    <!-- Debits Table -->
+    <div class="bg-white border-t border-gray-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="debitsTable">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date
+                        </th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sub
+                            Item</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payee
+                            / Supplier</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Description of Use</th>
+                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Amount (MWK)</th>
+                        <th class="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Documents</th>
+                        <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if debits %}
+                    {% for debit in debits %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">{{ debit.date }}</td>
+                        <td class="px-3 py-4 text-sm text-gray-900">
+                            <div class="font-semibold">{{ debit.subItemDescription }}</div>
+                            <div class="text-xs font-mono text-gray-500">{{ debit.code }}</div>
+                        </td>
+                        <td class="px-3 py-4 text-sm text-gray-900">{{ debit.supplierName }}</td>
+                        <td class="px-3 py-4 text-sm text-gray-500 italic">{{ debit.description }}</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm font-bold text-red-600 text-right">K{{
+                            "{:,.2f}".format(debit.amount) }}</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-center space-x-2">
+                            <a href="{{ url_for('loose_minute', debit_id=debit.id) }}?financial_year={{ financial_year }}"
+                                target="_blank"
+                                class="text-blue-600 hover:text-blue-800 text-xs bg-blue-50 px-2 py-1 rounded border border-blue-200">
+                                <i class="fas fa-file-alt mr-1"></i>Loose Minute
+                            </a>
+                            <a href="{{ url_for('gp10', debit_id=debit.id) }}?financial_year={{ financial_year }}"
+                                target="_blank"
+                                class="text-indigo-600 hover:text-indigo-800 text-xs bg-indigo-50 px-2 py-1 rounded border border-indigo-200">
+                                <i class="fas fa-file-invoice mr-1"></i>GP10 Voucher
+                            </a>
+                            <a href="{{ url_for('payment_receipt', debit_id=debit.id) }}?financial_year={{ financial_year }}"
+                                target="_blank"
+                                class="text-green-600 hover:text-green-800 text-xs bg-green-50 px-2 py-1 rounded border border-green-200">
+                                <i class="fas fa-receipt mr-1"></i>Receipt
+                            </a>
+                        </td>
+                        <td class="px-3 py-4 whitespace-nowrap text-right text-sm">
+                            <button onclick="deleteDebit('{{ debit.id }}')" class="text-gray-400 hover:text-red-600">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                            <i class="fas fa-arrow-down text-4xl mb-4 text-gray-300"></i>
+                            <p class="text-lg">No debits recorded yet</p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Add Debit Modal -->
+<div id="addDebitModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 p-8">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-6">Record Expenditure</h3>
+            <form id="addDebitForm">
+                <input type="hidden" name="financialYear" value="{{ financial_year }}">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Select Budget Sub-Item</label>
+                        <select name="itemId" id="debitItemId" required onchange="updateItemBalance()"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">-- Choose Item --</option>
+                            {% if budget %}
+                            {% for item in budget['items'] %}
+                            {% set funds = available_funds[item.id] %}
+                            <option value="{{ item.id }}" data-code="{{ item.code }}"
+                                data-desc="{{ item.subItemDescription }}" data-balance="{{ funds.balance }}">
+                                {{ item.subItemDescription }} ({{ item.code }}) - Bal: K{{
+                                "{:,.2f}".format(funds.balance) }}
+                            </option>
+                            {% endfor %}
+                            {% endif %}
+                        </select>
+                        <div id="itemBalanceWarning" class="mt-1 text-xs font-semibold text-blue-600"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date of Payment</label>
+                        <input type="date" name="date" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Month</label>
+                        <select name="month" required class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="">Select Month</option>
+                            <option value="April">April</option>
+                            <option value="May">May</option>
+                            <option value="June">June</option>
+                            <option value="July">July</option>
+                            <option value="August">August</option>
+                            <option value="September">September</option>
+                            <option value="October">October</option>
+                            <option value="November">November</option>
+                            <option value="December">December</option>
+                            <option value="January">January</option>
+                            <option value="February">February</option>
+                            <option value="March">March</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description of use of funds</label>
+                        <textarea name="description" required rows="2"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            placeholder="e.g. Procurement of science consumables for Form 4 exam labs"></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount to Pay (MWK)</label>
+                        <input type="number" step="0.01" name="amount" id="debitAmount" required
+                            oninput="updateAmountWords()" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Name of Supplier / Person
+                            receiving</label>
+                        <input type="text" name="supplierName" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md"
+                            placeholder="e.g. Acme Stationery Ltd or Name of Officer">
+                    </div>
+
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount in Words (for GP10/Loose
+                            Minute)</label>
+                        <input type="text" name="amountWords" id="amountWords" required readonly
+                            class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md italic">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Submitted By (Position)</label>
+                        <input type="text" name="position" required value="Bursar"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeAddDebitModal()"
+                        class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-red-600 border border-transparent rounded-md text-white hover:bg-red-700">
+                        Confirm & Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showAddDebitModal() {
+        document.getElementById('addDebitModal').classList.remove('hidden');
+    }
+
+    function closeAddDebitModal() {
+        document.getElementById('addDebitModal').classList.add('hidden');
+        document.getElementById('addDebitForm').reset();
+        document.getElementById('itemBalanceWarning').textContent = '';
+    }
+
+    function updateItemBalance() {
+        const select = document.getElementById('debitItemId');
+        const option = select.options[select.selectedIndex];
+        if (option && option.value) {
+            const balance = parseFloat(option.getAttribute('data-balance'));
+            const warning = document.getElementById('itemBalanceWarning');
+            warning.textContent = `Available for this item: K${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+        } else {
+            document.getElementById('itemBalanceWarning').textContent = '';
+        }
+    }
+
+    function numberToWords(number) {
+        // Simple number to words logic for MWK
+        const units = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+        const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+        const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+        const scales = ['', 'Thousand', 'Million', 'Billion'];
+
+        if (number === 0) return 'Zero';
+
+        let numStr = number.toString();
+        let [integerPart, decimalPart] = numStr.split('.');
+
+        function convertChunk(num) {
+            let chunk = '';
+            if (num >= 100) {
+                chunk += units[Math.floor(num / 100)] + ' Hundred ';
+                num %= 100;
+            }
+            if (num >= 10 && num <= 19) {
+                chunk += teens[num - 10] + ' ';
+            } else if (num >= 20 || num > 0) {
+                chunk += tens[Math.floor(num / 10)] + ' ' + (units[num % 10] || '') + ' ';
+            }
+            return chunk.trim();
+        }
+
+        let words = '';
+        let num = parseInt(integerPart);
+        let scaleIdx = 0;
+
+        while (num > 0) {
+            let chunk = num % 1000;
+            if (chunk > 0) {
+                words = convertChunk(chunk) + ' ' + scales[scaleIdx] + ' ' + words;
+            }
+            num = Math.floor(num / 1000);
+            scaleIdx++;
+        }
+
+        words = words.trim() + ' Kwacha';
+
+        if (decimalPart) {
+            let tambala = parseInt(decimalPart.padEnd(2, '0').slice(0, 2));
+            if (tambala > 0) {
+                words += ' and ' + convertChunk(tambala) + ' Tambala';
+            }
+        } else {
+            words += ' only';
+        }
+
+        return words.replace(/\s+/g, ' ');
+    }
+
+    function updateAmountWords() {
+        const amount = parseFloat(document.getElementById('debitAmount').value) || 0;
+        if (amount > 0) {
+            document.getElementById('amountWords').value = numberToWords(amount);
+        } else {
+            document.getElementById('amountWords').value = '';
+        }
+    }
+
+    function deleteDebit(debitId) {
+        if (confirm('Delete this expenditure record?')) {
+            fetch('/delete_debit/' + debitId, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            }).then(() => window.location.reload());
+        }
+    }
+
+    document.getElementById('addDebitForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+
+        const select = document.getElementById('debitItemId');
+        const option = select.options[select.selectedIndex];
+
+        const debitData = {
+            date: formData.get('date'),
+            month: formData.get('month'),
+            itemId: formData.get('itemId'),
+            subItemDescription: option.getAttribute('data-desc'),
+            code: option.getAttribute('data-code'),
+            description: formData.get('description'),
+            amount: parseFloat(formData.get('amount')),
+            amountWords: formData.get('amountWords'),
+            supplierName: formData.get('supplierName'),
+            position: formData.get('position'),
+            financialYear: formData.get('financialYear')
+        };
+
+        // Check if amount exceeds balance
+        const balance = parseFloat(option.getAttribute('data-balance'));
+        if (debitData.amount > balance) {
+            if (!confirm(`Warning: This amount (K${debitData.amount}) exceeds the available credited funds (K${balance}) for this item. Proceed anyway?`)) {
+                return;
+            }
+        }
+
+        fetch('/add_debit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(debitData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification('Expenditure recorded successfully');
+                    closeAddDebitModal();
+                    setTimeout(() => window.location.reload(), 1000);
+                }
+            });
+    });
+</script>
+{% endblock %}

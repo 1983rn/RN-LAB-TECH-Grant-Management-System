@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Print Functionality Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { padding: 10px 15px; margin: 5px; background: #007cba; color: white; border: none; cursor: pointer; }
+        button:hover { background: #005a87; }
+        .success { color: green; }
+        .error { color: red; }
+        @media print {
+            button { display: none !important; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Grant Management System - Print Functionality Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Basic Print Function</h2>
+        <button onclick="testBasicPrint()">Test Basic Print</button>
+        <p>This should open the browser's print dialog.</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 2: Print with Custom Title</h2>
+        <button onclick="testCustomTitlePrint()">Test Custom Title Print</button>
+        <p>This should open print dialog with "Budget Allocation" as the title.</p>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test 3: Error Handling</h2>
+        <button onclick="testErrorHandling()">Test Error Handling</button>
+        <p>This should show an error notification if something goes wrong.</p>
+    </div>
+    
+    <div class="test-section no-print">
+        <h2>Instructions for PDF Generation:</h2>
+        <ol>
+            <li>Click any print button above</li>
+            <li>In the print dialog, select "Save as PDF" as the destination</li>
+            <li>Choose your desired settings (landscape for tables, portrait for reports)</li>
+            <li>Click "Save" to generate the PDF file</li>
+        </ol>
+    </div>
+    
+    <div id="notifications" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+    
+    <script>
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.style.cssText = `
+                padding: 10px 15px;
+                margin: 5px 0;
+                border-radius: 5px;
+                background: ${type === 'success' ? '#d4edda' : '#f8d7da'};
+                color: ${type === 'success' ? '#155724' : '#721c24'};
+                border: 1px solid ${type === 'success' ? '#c3e6cb' : '#f5c6cb'};
+            `;
+            notification.textContent = message;
+            
+            document.getElementById('notifications').appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+        
+        function printPage(reportTitle) {
+            try {
+                const originalTitle = document.title;
+                document.title = reportTitle || document.title;
+                
+                setTimeout(() => {
+                    window.print();
+                    document.title = originalTitle;
+                    showNotification('Print dialog opened - Use your browser\'s print settings to save as PDF');
+                }, 100);
+            } catch (error) {
+                console.error('Print error:', error);
+                showNotification('Print failed: ' + error.message, 'error');
+            }
+        }
+        
+        function testBasicPrint() {
+            try {
+                window.print();
+                showNotification('Basic print test successful');
+            } catch (error) {
+                showNotification('Basic print test failed: ' + error.message, 'error');
+            }
+        }
+        
+        function testCustomTitlePrint() {
+            printPage('Budget Allocation');
+        }
+        
+        function testErrorHandling() {
+            try {
+                // Simulate an error condition
+                throw new Error('Simulated print error for testing');
+            } catch (error) {
+                showNotification('Error handling test: ' + error.message, 'error');
+            }
+        }
+        
+        console.log('Print functionality test page loaded successfully');
+    </script>
+</body>
+</html>
