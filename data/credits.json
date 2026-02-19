@@ -1,0 +1,50 @@
+[
+  {
+    "id": "credit_1770819791.830775",
+    "date": "2026-01-19",
+    "month": "January",
+    "lineItems": [
+      {
+        "itemId": "item_1",
+        "subItemDescription": "Wages for support staff",
+        "code": "2211012204",
+        "amount": 378000
+      }
+    ],
+    "remarks": "Salaries for Support Staff",
+    "financialYear": "2026-2027",
+    "createdAt": "2026-02-11T16:23:11.830797"
+  },
+  {
+    "id": "credit_1771165442.786473",
+    "date": "2026-01-19",
+    "month": "January",
+    "lineItems": [
+      {
+        "itemId": "item_1",
+        "subItemDescription": "Wages for support staff",
+        "code": "2211012204",
+        "amount": 100000
+      }
+    ],
+    "remarks": "Payment of honoraria for the assistant Teacher (Science Dept) for the month of December  ",
+    "financialYear": "2026-2027",
+    "createdAt": "2026-02-15T16:24:02.786491"
+  },
+  {
+    "id": "credit_1771165498.96573",
+    "date": "2026-01-19",
+    "month": "January",
+    "lineItems": [
+      {
+        "itemId": "item_6",
+        "subItemDescription": "Consumable stores",
+        "code": "2211011502",
+        "amount": 566500
+      }
+    ],
+    "remarks": "Procurement of Consumable stores for the school",
+    "financialYear": "2026-2027",
+    "createdAt": "2026-02-15T16:24:58.965745"
+  }
+]

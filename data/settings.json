@@ -1,0 +1,21 @@
+{
+  "compiledBy": "SEGEME",
+  "enteredBy": "SEGEME",
+  "authorizingOfficer": "YOBE",
+  "authorizingAppointment": "PO",
+  "counterSign": "ALFAZEMA",
+  "counterAppointment": "PL",
+  "ministry": "CWED",
+  "schoolAddress": "CWED, P. O. BOX 98, LILONGWE",
+  "financialYear": "2026-2027",
+  "totalGrantsByYear": {
+    "2026-2027": 500000.0
+  },
+  "documentCountersByYear": {
+    "2026-2027": {
+      "looseMinute": 0,
+      "gp10": 4,
+      "receipt": 0
+    }
+  }
+}
