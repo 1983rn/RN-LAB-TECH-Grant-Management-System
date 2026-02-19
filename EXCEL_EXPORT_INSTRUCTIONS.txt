@@ -1,0 +1,85 @@
+EXCEL EXPORT FEATURE - INSTALLATION INSTRUCTIONS
+================================================
+
+A new "Download Excel" feature has been added to the Budget Allocation page.
+
+INSTALLATION STEPS:
+------------------
+
+1. INSTALL REQUIRED PACKAGE:
+
+   If using virtual environment (.venv):
+   
+   .venv\Scripts\activate
+   pip install openpyxl==3.1.2
+   
+   OR
+   
+   If using system Python:
+   
+   pip install openpyxl==3.1.2
+   
+   OR
+   
+   Install all requirements:
+   
+   pip install -r requirements.txt
+
+2. RESTART THE APPLICATION:
+
+   - Stop the Flask server (Ctrl + C)
+   - Run: python app.py
+   - OR double-click: Start_Application.bat
+
+3. TEST THE FEATURE:
+
+   - Navigate to Budget Allocation page
+   - Click "Download Excel" button (green button with Excel icon)
+   - Excel file should download automatically
+
+FEATURE DETAILS:
+---------------
+
+✅ Button Location: Top of Budget Allocation page (green button)
+✅ File Name Format: Budget_Allocation_2026-2027.xlsx
+✅ Includes: Malawi Government logo
+✅ Columns: All budget data with monthly allocations (April-March)
+✅ Formatting: Professional headers, borders, and totals
+✅ Data Integrity: All rows and columns included, numeric values preserved
+
+EXCEL FILE STRUCTURE:
+--------------------
+
+Row 1-2: Logo and Title
+Row 4: Headers (POW No, POW Name, Sub Activity, Sub Item Description, Code, 
+       Annual Allocation, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec, Jan, Feb, Mar, 
+       Total Budgeted, Balance)
+Row 5+: Budget data
+Last Row: Grand Totals with formulas
+
+TROUBLESHOOTING:
+---------------
+
+If "Download Excel" button doesn't work:
+1. Verify openpyxl is installed: pip list | findstr openpyxl
+2. Check Flask console for errors
+3. Ensure logo file exists: static/images/Malawi Government logo.png
+4. Try restarting the application
+
+If Excel file is corrupted:
+1. Check that all budget data is valid
+2. Verify financial year is set correctly
+3. Check browser console (F12) for JavaScript errors
+
+TECHNICAL NOTES:
+---------------
+
+- Uses openpyxl library for Excel generation
+- Exports data directly from budget JSON
+- Includes automatic column width adjustment
+- Applies professional styling (colors, borders, fonts)
+- Generates file in-memory (BytesIO) for efficiency
+- Month order follows Malawi financial year (April-March)
+
+Version: 1.0
+Feature Added: 2025

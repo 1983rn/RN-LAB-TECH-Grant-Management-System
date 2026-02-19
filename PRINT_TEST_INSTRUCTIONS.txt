@@ -1,0 +1,80 @@
+BUDGET ALLOCATION PDF PRINT TEST INSTRUCTIONS
+==============================================
+
+The Budget Allocation print layout has been updated with optimized column widths.
+
+TO TEST THE CHANGES:
+-------------------
+
+1. CLEAR BROWSER CACHE (CRITICAL):
+   - Press Ctrl + Shift + Delete
+   - Select "Cached images and files"
+   - Click "Clear data"
+   
+   OR
+   
+   - Press Ctrl + F5 (hard refresh) on the Budget page
+
+2. RESTART THE APPLICATION:
+   - Close the Flask server
+   - Run: python app.py
+   - Navigate to Budget Allocation page
+
+3. PRINT/PREVIEW:
+   - Click "Print Budget" button
+   - OR Press Ctrl + P
+   - Check Print Preview
+
+EXPECTED RESULTS:
+----------------
+
+✅ Sub Item Description column: NARROW (10% width) with text wrapping
+✅ Annual Allocation column: COMPACT (3.5% width)
+✅ Monthly columns (Apr-Mar): WIDER (6% each) - ALL 12 VISIBLE
+✅ Total Budgeted column: COMPACT (3.5% width)
+✅ Balance column: COMPACT (3.5% width)
+✅ Months in order: Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec, Jan, Feb, Mar
+✅ No horizontal scrollbar in PDF
+✅ All monthly allocations fully visible
+
+COLUMN WIDTH BREAKDOWN:
+----------------------
+- Sub Item Description: 10%
+- Annual Allocation: 3.5%
+- April: 6%
+- May: 6%
+- June: 6%
+- July: 6%
+- August: 6%
+- September: 6%
+- October: 6%
+- November: 6%
+- December: 6%
+- January: 6%
+- February: 6%
+- March: 6%
+- Total Budgeted: 3.5%
+- Balance: 3.5%
+
+TOTAL: 10% + 3.5% + (12 × 6%) + 3.5% + 3.5% = 92.5% (allows margin)
+
+TROUBLESHOOTING:
+---------------
+
+If changes don't appear:
+1. Hard refresh browser (Ctrl + Shift + R)
+2. Clear all browser cache
+3. Try different browser (Chrome, Firefox, Edge)
+4. Check browser console for CSS errors (F12)
+5. Verify you're on Budget Allocation page (not cached version)
+
+TECHNICAL NOTES:
+---------------
+- Print CSS uses @media print with !important flags
+- table-layout: fixed enforces column widths
+- max-width and min-width prevent column expansion
+- white-space: normal allows text wrapping in Sub Item Description
+- Font sizes reduced for better fit (7-8px in print)
+
+Version: 2.0
+Last Updated: 2025
