@@ -100,6 +100,8 @@ def init_database():
             CREATE TABLE IF NOT EXISTS school_settings (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 school_id INTEGER NOT NULL,
+                academic_year TEXT NOT NULL,
+                term TEXT NOT NULL,
                 financial_year TEXT NOT NULL,
                 school_name TEXT,
                 school_address TEXT,
@@ -124,6 +126,8 @@ def init_database():
             CREATE TABLE IF NOT EXISTS budget_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 school_id INTEGER NOT NULL,
+                academic_year TEXT NOT NULL,
+                term TEXT NOT NULL,
                 financial_year TEXT NOT NULL,
                 template_row_id INTEGER NOT NULL,
                 item_key TEXT NOT NULL,
@@ -145,6 +149,8 @@ def init_database():
             CREATE TABLE IF NOT EXISTS credits (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 school_id INTEGER NOT NULL,
+                academic_year TEXT NOT NULL,
+                term TEXT NOT NULL,
                 financial_year TEXT NOT NULL,
                 date_received DATE NOT NULL,
                 month TEXT NOT NULL,
@@ -160,6 +166,8 @@ def init_database():
             CREATE TABLE IF NOT EXISTS debits (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 school_id INTEGER NOT NULL,
+                academic_year TEXT NOT NULL,
+                term TEXT NOT NULL,
                 financial_year TEXT NOT NULL,
                 document_number TEXT NOT NULL,
                 date_paid DATE NOT NULL,
@@ -173,6 +181,12 @@ def init_database():
                 supplier_name TEXT,
                 position TEXT,
                 cheque_number TEXT,
+                ipdc_venue TEXT,
+                ipdc_minute_no TEXT,
+                ipdc_members TEXT,
+                ipdc_opening_prayer TEXT,
+                ipdc_closing_prayer TEXT,
+                ipdc_quotations TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (school_id) REFERENCES schools(id)
             )
@@ -278,41 +292,47 @@ def init_database():
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_credits_school ON credits(school_id, financial_year)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_debits_school ON debits(school_id, financial_year)')
         
-        # IPDC Column Migrations
-        try:
-            cursor.execute('ALTER TABLE debits ADD COLUMN ipdc_venue TEXT')
-            cursor.execute('ALTER TABLE debits ADD COLUMN ipdc_minute_no TEXT')
-            cursor.execute('ALTER TABLE debits ADD COLUMN ipdc_members TEXT')
-            cursor.execute('ALTER TABLE debits ADD COLUMN ipdc_opening_prayer TEXT')
-            cursor.execute('ALTER TABLE debits ADD COLUMN ipdc_closing_prayer TEXT')
-            print("✅ Added IPDC columns to debits table")
-        except:
-            pass  # Columns likely already exist
-            
+        # IPDC Column Migrations - Robust check
+        def column_exists(table, column):
+            cursor.execute(f"PRAGMA table_info({table})")
+            return any(row[1] == column for row in cursor.fetchall())
+
+        columns_to_add = [
+            ('debits', 'ipdc_venue', 'TEXT'),
+            ('debits', 'ipdc_minute_no', 'TEXT'),
+            ('debits', 'ipdc_members', 'TEXT'),
+            ('debits', 'ipdc_opening_prayer', 'TEXT'),
+            ('debits', 'ipdc_closing_prayer', 'TEXT'),
+            ('debits', 'ipdc_quotations', 'TEXT'),
+            ('debits', 'cheque_number', 'TEXT')
+        ]
+
+        for table, col, col_type in columns_to_add:
+            if not column_exists(table, col):
+                try:
+                    cursor.execute(f'ALTER TABLE {table} ADD COLUMN {col} {col_type}')
+                    print(f"✅ Added {col} column to {table}")
+                except Exception as e:
+                    print(f"❌ Error adding {col} to {table}: {e}")
+
         # Add academic_year and term to all data tables if missing
         for table in ['budget_items', 'credits', 'debits', 'financial_year_counters', 'ipdc_counters', 'school_settings']:
-            try:
-                cursor.execute(f"ALTER TABLE {table} ADD COLUMN academic_year TEXT")
-                print(f"✅ Added academic_year to {table}")
-            except:
-                pass
-            try:
-                cursor.execute(f"ALTER TABLE {table} ADD COLUMN term TEXT")
-                print(f"✅ Added term to {table}")
-            except:
-                pass
+            for col in [('academic_year', 'TEXT'), ('term', 'TEXT')]:
+                if not column_exists(table, col[0]):
+                    try:
+                        cursor.execute(f"ALTER TABLE {table} ADD COLUMN {col[0]} {col[1]}")
+                        print(f"✅ Added {col[0]} to {table}")
+                    except Exception as e:
+                        print(f"❌ Error adding {col[0]} to {table}: {e}")
         
-        try:
-            cursor.execute("ALTER TABLE school_settings ADD COLUMN balance_bf REAL DEFAULT 0")
-            print("✅ Added balance_bf to school_settings")
-        except:
-            pass
+        # Specific column additions
+        if not column_exists('school_settings', 'balance_bf'):
+            try:
+                cursor.execute("ALTER TABLE school_settings ADD COLUMN balance_bf REAL DEFAULT 0")
+                print("✅ Added balance_bf to school_settings")
+            except Exception as e:
+                print(f"❌ Error adding balance_bf: {e}")
 
-        try:
-            cursor.execute("ALTER TABLE debits ADD COLUMN cheque_number TEXT")
-            print("✅ Added cheque_number to debits")
-        except:
-            pass
 
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_school ON school_sessions(school_id)')
         

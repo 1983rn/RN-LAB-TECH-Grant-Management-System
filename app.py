@@ -14,6 +14,7 @@ from io import BytesIO
 # Import authentication modules
 from database import init_database, get_db, log_action, generate_otp, hash_password, create_developer_account, DATABASE_PATH as DB_FILE
 from auth import login_school, login_developer, require_login, require_developer, get_current_school_id
+import uuid
 from subscription_plans import SUBSCRIPTION_PLANS, get_plan
 
 # Import database helpers for multi-tenant data access
@@ -42,6 +43,19 @@ except ImportError as e:
 app = Flask(__name__)
 CORS(app)
 app.secret_key = os.environ.get('SECRET_KEY', 'rn-lab-tech-grant-mgmt-secret-2025-stable-key')
+
+# In-memory cache for IPDC sessions
+ipdc_sessions = {}
+
+# Custom filters
+@app.template_filter('from_json')
+def from_json_filter(value):
+    if not value:
+        return {}
+    try:
+        return json.loads(value)
+    except:
+        return {}
 
 print(f"Database location: {DB_FILE}")
 
@@ -1551,9 +1565,9 @@ def payment_receipt(debit_id):
         
     return render_template('receipt.html', debit=debit, budget=budget)
 
-@app.route('/save_ipdc/<debit_id>', methods=['POST'])
+@app.route('/persist_ipdc/<debit_id>', methods=['POST'])
 @require_login
-def save_ipdc(debit_id):
+def persist_ipdc_data(debit_id):
     """Save IPDC meeting details for a specific debit"""
     school_id = get_current_school_id()
     if not school_id:
@@ -1593,6 +1607,77 @@ def ipdc_minute(debit_id):
         return "Debit not found", 404
         
     return render_template('ipdc_minute.html', debit=debit, budget=budget, settings=get_settings())
+
+@app.route('/save_combined_ipdc_data', methods=['POST'])
+@require_login
+def save_combined_ipdc_data():
+    data = request.json
+    session_id = str(uuid.uuid4())
+    ipdc_sessions[session_id] = data
+    return jsonify({'success': True, 'session_id': session_id})
+
+
+@app.route('/combined_ipdc')
+@require_login
+def combined_ipdc():
+    """Generate Combined IPDC Minute for multiple debits"""
+    session_id = request.args.get('session_id')
+    
+    if session_id and session_id in ipdc_sessions:
+        data = ipdc_sessions[session_id]
+        meeting = data['meeting']
+        items_data = data['items']
+        
+        academic_year = get_academic_year()
+        term = get_term()
+        debits = get_debits(academic_year, term)
+        
+        selected_items = []
+        for item in items_data:
+            debit = next((d for d in debits if str(d.get('id')) == str(item['debit_id'])), None)
+            if debit:
+                selected_items.append({
+                    'debit': debit,
+                    'quotes': item['quotes'],
+                    'reason': item['reason']
+                })
+        
+        meeting_info = {
+            **meeting,
+            'academicYear': academic_year,
+            'term': term,
+            'date': selected_items[0]['debit'].get('date', '') if selected_items else ''
+        }
+        
+        return render_template('combined_ipdc_minute.html',
+                          items=selected_items,
+                          meeting=meeting_info,
+                          settings=get_settings())
+    
+    # Fallback for old style URLs (optional)
+    debit_ids = request.args.getlist('ids')
+    academic_year = get_academic_year()
+    term = get_term()
+    debits = get_debits(academic_year, term)
+    selected_debits = [d for d in debits if str(d.get('id')) in debit_ids]
+    
+    items = [{'debit': d, 'quotes': [{'name': d['supplierName'], 'amount': d['amount'], 'is_selected': True}], 'reason': 'Selected after review'} for d in selected_debits]
+    
+    meeting_info = {
+        'venue': request.args.get('venue', ''),
+        'minute_no': request.args.get('minute_no', ''),
+        'members': request.args.get('members', ''),
+        'opening_prayer': request.args.get('opening_prayer', ''),
+        'closing_prayer': request.args.get('closing_prayer', ''),
+        'date': selected_debits[0].get('date', '') if selected_debits else '',
+        'academicYear': academic_year,
+        'term': term
+    }
+    
+    return render_template('combined_ipdc_minute.html',
+                      items=items,
+                      meeting=meeting_info,
+                      settings=get_settings())
 
 
 @app.route('/settings', methods=['GET', 'POST'])
@@ -1665,7 +1750,80 @@ def settings():
                           subscription_info=subscription_info,
                           current_page='settings',
                           success=request.args.get('success'))
-                          
+
+@app.route('/itemized')
+@require_login
+def itemized():
+    """Itemized spending page"""
+    academic_year = get_academic_year()
+    term = get_term()
+    budget = get_budget(academic_year, term)
+    debits = get_debits(academic_year, term) or []
+    
+    if term == 'Term 1':
+        term_months = ['September', 'October', 'November', 'December']
+    elif term == 'Term 2':
+        term_months = ['January', 'February', 'March']
+    else:
+        term_months = ['April', 'May', 'June', 'July']
+        
+    itemized_data = []
+    monthly_totals = {m: 0 for m in term_months}
+    total_alloc = 0
+    total_used = 0
+    
+    if budget and budget.get('items'):
+        for item in budget.get('items', []):
+            try:
+                item_alloc = float(item.get('totalAllocation', 0) or 0)
+            except (ValueError, TypeError):
+                item_alloc = 0.0
+                
+            item_used = 0.0
+            month_amounts = {m: 0.0 for m in term_months}
+            
+            for d in debits:
+                if d.get('itemId') == item.get('id'):
+                    try:
+                        amt = float(d.get('amount', 0) or 0)
+                    except (ValueError, TypeError):
+                        amt = 0.0
+                    month = d.get('month')
+                    if month in term_months:
+                        month_amounts[month] += amt
+                        monthly_totals[month] += amt
+                    # We only sum debits that belong to this term
+                    item_used += amt
+            
+            # Only include items that have a budget allocation
+            if item_alloc > 0:
+                itemized_data.append({
+                    'subItemDescription': item.get('subItemDescription'),
+                    'code': item.get('code'),
+                    'totalAllocation': item_alloc,
+                    'month_amounts': month_amounts,
+                    'totalUsed': item_used,
+                    'balance': item_alloc - item_used
+                })
+                total_alloc += item_alloc
+                total_used += item_used
+
+    totals = {
+        'totalAllocation': total_alloc,
+        'monthly_totals': monthly_totals,
+        'totalUsed': total_used,
+        'balance': total_alloc - total_used
+    }
+
+    return render_template('itemized.html',
+                      itemized_data=itemized_data,
+                      totals=totals,
+                      term_months=term_months,
+                      academic_year=academic_year,
+                      term=term,
+                      settings=get_settings(),
+                      current_page='itemized')
+
 @app.route('/tracking')
 @require_login
 def tracking():

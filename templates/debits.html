@@ -129,6 +129,10 @@
                     class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md">
                     <i class="fas fa-minus mr-2"></i>Record Expenditure (Debit)
                 </button>
+                <button onclick="showCombinedIpdcModal()"
+                    class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-layer-group mr-2"></i>Combined IPDC Minute
+                </button>
             </div>
         </div>
     </div>
@@ -187,20 +191,11 @@
                             {% endif %}
                         </td>
                         <td class="px-3 py-4 text-sm text-gray-500 italic">
-                            {% set desc = debit.description %}
-                            {% set d_lower = desc|lower %}
-                            {% set short_desc = desc %}
-                            {% set found = false %}
-                            
-                            {% if not found and ' during' in d_lower %}{% set short_desc = desc[:d_lower.find(' during')] %}{% set found = true %}{% endif %}
-                            {% if not found and ' for' in d_lower %}{% set short_desc = desc[:d_lower.find(' for')] %}{% set found = true %}{% endif %}
-                            {% if not found and ' at' in d_lower %}{% set short_desc = desc[:d_lower.find(' at')] %}{% set found = true %}{% endif %}
-                            {% if not found and ' being' in d_lower %}{% set short_desc = desc[:d_lower.find(' being')] %}{% set found = true %}{% endif %}
-                            {% if not found and ' to ' in d_lower %}{% set short_desc = desc[:d_lower.find(' to ')] %}{% set found = true %}{% endif %}
-                            {% if not found and ' as ' in d_lower %}{% set short_desc = desc[:d_lower.find(' as ')] %}{% set found = true %}{% endif %}
-                            
-                            {{ short_desc }}{% if found %}.........{% endif %}
-                            <script>console.log("Debit ID: {{ debit.id }} processed");</script>
+                            {% if debit.description|length > 30 %}
+                                {{ debit.description[:30] }}...
+                            {% else %}
+                                {{ debit.description }}
+                            {% endif %}
                         </td>
                         <td class="px-3 py-4 whitespace-nowrap text-sm font-bold text-red-600 text-right">K{{
                             "{:,.2f}".format(debit.amount) }}</td>
@@ -228,6 +223,7 @@
                                 data-members="{{ debit.ipdcMembers }}"
                                 data-opening="{{ debit.ipdcOpeningPrayer }}"
                                 data-closing="{{ debit.ipdcClosingPrayer }}"
+                                data-quotations='{{ debit.ipdcQuotations }}'
                                 class="text-orange-600 hover:text-orange-800 text-xs bg-orange-50 px-2 py-1 rounded border border-orange-200">
                                 <i class="fas fa-handshake mr-1"></i>IPDC Minute
                             </button>
@@ -303,6 +299,47 @@
                     </div>
                 </div>
 
+                <!-- Quotations Section -->
+                <div class="border-t pt-4">
+                    <h4 class="text-sm font-bold text-blue-800 mb-3 uppercase tracking-wider">Quotations Collected</h4>
+                    
+                    <!-- Input Section -->
+                    <div class="bg-gray-50 p-3 rounded-md border border-gray-100 space-y-3 mb-4">
+                        {% for i in range(1, 4) %}
+                        <div class="grid grid-cols-12 gap-3">
+                            <div class="col-span-8">
+                                <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1">Supplier Name {{ i }}</label>
+                                <input type="text" id="sq_name_{{ i }}" class="w-full text-sm border-gray-300 rounded shadow-sm focus:ring-indigo-500" 
+                                    placeholder="Enter Supplier Name" oninput="updateSingleQuoteLabels()">
+                            </div>
+                            <div class="col-span-4">
+                                <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1">Total Amount</label>
+                                <input type="number" step="0.01" id="sq_amount_{{ i }}" class="w-full text-sm border-gray-300 rounded shadow-sm" placeholder="K0.00">
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Selection Section -->
+                    <div class="bg-indigo-50 p-4 rounded-md border border-indigo-100 shadow-inner">
+                        <label class="block text-xs font-bold text-indigo-800 mb-3 uppercase tracking-wider">Tick the selected supplier:</label>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {% for i in range(1, 4) %}
+                            <label class="relative flex items-center p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-indigo-50 transition-colors">
+                                <input type="radio" name="single_selected_quote" value="{{ i }}" {% if i == 1 %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300">
+                                <span class="ml-3 block text-sm font-medium text-gray-900 sq-label-{{ i }} truncate">Quotation {{ i }}</span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="block text-xs font-bold text-gray-600 mb-1">Reason for selection</label>
+                        <input type="text" id="ipdcReason" class="w-full text-sm border-gray-300 rounded mt-1 shadow-sm" 
+                            placeholder="e.g. Lowest price / Quality of products" value="Lowest price and meeting all specifications">
+                    </div>
+                </div>
+
                 <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
                     <button type="button" onclick="closeIpdcModal()"
                         class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md border border-gray-300 hover:bg-gray-200">
@@ -372,11 +409,6 @@
                             <option value="March">March</option>
                         </select>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Cheque Number</label>
-                        <input type="text" name="chequeNumber" placeholder="e.g. 001234"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                    </div>
 
                     <div class="md:col-span-2">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Description of use of funds</label>
@@ -385,17 +417,27 @@
                             placeholder="e.g. Procurement of science consumables for Form 4 exam labs"></textarea>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Amount to Pay (MWK)</label>
-                        <input type="number" step="0.01" name="amount" id="debitAmount" required
-                            oninput="updateAmountWords()" class="w-full px-3 py-2 border border-gray-300 rounded-md">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Name of Supplier / Person
-                            receiving</label>
-                        <textarea name="supplierName" required rows="2"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md"
-                            placeholder="e.g. Acme Stationery Ltd or Name of Officer"></textarea>
+                    <!-- Payee Rows -->
+                    <div class="md:col-span-2">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-700">Suppliers / Persons Receiving</label>
+                            <button type="button" onclick="addPayeeRow()"
+                                class="text-xs bg-blue-50 text-blue-600 border border-blue-200 px-2 py-1 rounded hover:bg-blue-100">
+                                <i class="fas fa-plus mr-1"></i>Add Payee
+                            </button>
+                        </div>
+                        <div id="payeeRows">
+                            <div class="payee-row flex gap-2 mb-2 items-center">
+                                <input type="text" class="payee-name flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                                    placeholder="Name of Supplier / Person" required>
+                                <input type="number" step="0.01" class="payee-amount w-40 px-3 py-2 border border-gray-300 rounded-md text-sm text-right"
+                                    placeholder="Amount (MWK)" required oninput="updatePayeeTotal()">
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-center mt-2 px-1">
+                            <span class="text-xs text-gray-500">Enter each payee with their specific amount</span>
+                            <span id="payeeTotalDisplay" class="text-sm font-bold text-green-700">Total: K0.00</span>
+                        </div>
                     </div>
 
                     <div class="md:col-span-2">
@@ -405,6 +447,11 @@
                             class="w-full px-3 py-2 bg-gray-50 border border-gray-300 rounded-md italic">
                     </div>
 
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Cheque Number</label>
+                        <input type="text" name="chequeNumber" placeholder="e.g. 001234"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Submitted By (Position)</label>
                         <input type="text" name="position" required value="Bursar"
@@ -424,6 +471,118 @@
                 </div>
             </form>
         </div>
+</div>
+
+<!-- Combined IPDC Modal -->
+<div id="combinedIpdcModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50 overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 p-8">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full p-6">
+            <h3 class="text-xl font-bold text-gray-900 mb-4">Combined IPDC Minute</h3>
+            <p class="text-sm text-gray-500 mb-4">Select multiple expenditures to combine into one IPDC minute document.</p>
+
+            <form id="combinedIpdcForm">
+                <!-- Meeting Details -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Minute No.</label>
+                        <div class="flex">
+                            <input type="text" id="combinedMinuteNo"
+                                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="001/2026">
+                            <button type="button" onclick="refreshCombinedIpdcNumber()"
+                                class="ml-1 px-2 py-1 bg-gray-100 border border-gray-300 rounded text-gray-600 hover:bg-gray-200">
+                                <i class="fas fa-sync-alt text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Venue</label>
+                        <input type="text" id="combinedVenue"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Members Present (One name per line)</label>
+                    <textarea id="combinedMembers" rows="3"
+                        class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        placeholder="1. Name Surname (Rank)&#10;2. Another Name..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Opening Prayer</label>
+                        <input type="text" id="combinedOpeningPrayer"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Closing Prayer</label>
+                        <input type="text" id="combinedClosingPrayer"
+                            class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                </div>
+
+                <!-- Select Debits -->
+                <div class="mb-4">
+                    <h4 class="font-semibold text-gray-800 mb-2">Select Expenditures to Combine</h4>
+                    <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50 sticky top-0">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 w-8">
+                                        <input type="checkbox" id="selectAllDebits" onchange="toggleAllDebits(this)">
+                                    </th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Sub Item</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500">Supplier</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                {% if debits %}
+                                {% for debit in debits %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-3 py-2">
+                                        <input type="checkbox" class="combined-debit-checkbox" value="{{ debit.id }}"
+                                            data-desc="{{ debit.subItemDescription }}" data-amount="{{ debit.amount }}"
+                                            data-supplier="{{ debit.supplierName }}" data-description="{{ debit.description }}">
+                                    </td>
+                                    <td class="px-3 py-2 text-sm">{{ debit.subItemDescription }}</td>
+                                    <td class="px-3 py-2 text-sm text-gray-500">
+                                        {% if "=" in debit.supplierName or "," in debit.supplierName %}
+                                            {{ debit.supplierName.split("=")[0].split(",")[0].strip() }}...
+                                        {% else %}
+                                            {{ debit.supplierName }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="px-3 py-2 text-sm text-right font-semibold">K{{ "{:,.2f}".format(debit.amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="combinedTotal" class="mt-2 text-right font-bold text-green-600">Selected: K0.00</div>
+                </div>
+
+                <!-- Quotations Section -->
+                <div id="quotationsContainer" class="mt-4 space-y-6 max-h-96 overflow-y-auto p-2 border-t border-gray-100 hidden">
+                    <h4 class="font-bold text-gray-900 border-b pb-2">Quotations per Sub-Item</h4>
+                    <!-- Dynamic content will be injected here -->
+                </div>
+
+                <div class="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+                    <button type="button" onclick="closeCombinedIpdcModal()"
+                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md border border-gray-300 hover:bg-gray-200">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 flex items-center">
+                        <i class="fas fa-file-alt mr-2"></i> Generate Combined IPDC
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -502,13 +661,51 @@
         return words.replace(/\s+/g, ' ');
     }
 
-    function updateAmountWords() {
-        const amount = parseFloat(document.getElementById('debitAmount').value) || 0;
-        if (amount > 0) {
-            document.getElementById('amountWords').value = numberToWords(amount);
+    function addPayeeRow() {
+        const container = document.getElementById('payeeRows');
+        const row = document.createElement('div');
+        row.className = 'payee-row flex gap-2 mb-2 items-center';
+        row.innerHTML = `
+            <input type="text" class="payee-name flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                placeholder="Name of Supplier / Person" required>
+            <input type="number" step="0.01" class="payee-amount w-40 px-3 py-2 border border-gray-300 rounded-md text-sm text-right"
+                placeholder="Amount (MWK)" required oninput="updatePayeeTotal()">
+            <button type="button" onclick="removePayeeRow(this)" class="text-red-500 hover:text-red-700 px-1">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        container.appendChild(row);
+    }
+
+    function removePayeeRow(btn) {
+        const rows = document.querySelectorAll('.payee-row');
+        if (rows.length > 1) {
+            btn.closest('.payee-row').remove();
+            updatePayeeTotal();
+        }
+    }
+
+    function getPayeeTotal() {
+        let total = 0;
+        document.querySelectorAll('.payee-amount').forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        return total;
+    }
+
+    function updatePayeeTotal() {
+        const total = getPayeeTotal();
+        document.getElementById('payeeTotalDisplay').textContent = 'Total: K' + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        // Update amount in words
+        if (total > 0) {
+            document.getElementById('amountWords').value = numberToWords(total);
         } else {
             document.getElementById('amountWords').value = '';
         }
+    }
+
+    function updateAmountWords() {
+        updatePayeeTotal();
     }
 
     function deleteDebit(debitId) {
@@ -527,6 +724,26 @@
         const select = document.getElementById('debitItemId');
         const option = select.options[select.selectedIndex];
 
+        // Collect payee data
+        const payeeNames = document.querySelectorAll('.payee-name');
+        const payeeAmounts = document.querySelectorAll('.payee-amount');
+        let supplierLines = [];
+        let totalAmount = 0;
+
+        payeeNames.forEach((nameInput, i) => {
+            const name = nameInput.value.trim();
+            const amt = parseFloat(payeeAmounts[i].value) || 0;
+            if (name && amt > 0) {
+                supplierLines.push(name + '=' + amt.toFixed(2));
+                totalAmount += amt;
+            }
+        });
+
+        if (supplierLines.length === 0) {
+            alert('Please enter at least one payee with an amount.');
+            return;
+        }
+
         const debitData = {
             date: formData.get('date'),
             month: formData.get('month'),
@@ -534,9 +751,9 @@
             subItemDescription: option.getAttribute('data-desc'),
             code: option.getAttribute('data-code'),
             description: formData.get('description'),
-            amount: parseFloat(formData.get('amount')),
+            amount: totalAmount,
             amountWords: formData.get('amountWords'),
-            supplierName: formData.get('supplierName'),
+            supplierName: supplierLines.join('\n'),
             position: formData.get('position'),
             chequeNumber: formData.get('chequeNumber'),
             financialYear: formData.get('financialYear')
@@ -587,6 +804,42 @@
             refreshIpdcNumber();
         }
 
+        // Handle Quotations pre-filling
+        const quotesJson = btn.getAttribute('data-quotations');
+        if (quotesJson && quotesJson !== 'None' && quotesJson !== '') {
+            try {
+                const data = JSON.parse(quotesJson);
+                document.getElementById('ipdcReason').value = data.reason || 'Lowest price and meeting all specifications';
+                if (data.quotes && data.quotes.length > 0) {
+                    data.quotes.forEach((q, idx) => {
+                        const i = idx + 1;
+                        if (i <= 3) {
+                            document.getElementById(`sq_name_${i}`).value = q.name || '';
+                            document.getElementById(`sq_amount_${i}`).value = q.amount || '';
+                            if (q.is_selected) {
+                                document.querySelector(`input[name="single_selected_quote"][value="${i}"]`).checked = true;
+                            }
+                        }
+                    });
+                }
+                updateSingleQuoteLabels();
+            } catch (e) {
+                console.error("Error parsing quotations JSON", e);
+            }
+        } else {
+            // Default pre-fill for Quote 1 if empty
+            const supplier = btn.getAttribute('data-supplier');
+            const amount = btn.getAttribute('data-amount');
+            document.getElementById('sq_name_1').value = supplier || '';
+            document.getElementById('sq_amount_1').value = amount || '';
+            document.getElementById('sq_name_2').value = '';
+            document.getElementById('sq_amount_2').value = '';
+            document.getElementById('sq_name_3').value = '';
+            document.getElementById('sq_amount_3').value = '';
+            document.querySelector('input[name="single_selected_quote"][value="1"]').checked = true;
+            updateSingleQuoteLabels();
+        }
+
         document.getElementById('ipdcModal').classList.remove('hidden');
     }
 
@@ -606,32 +859,329 @@
 
     document.getElementById('ipdcForm').addEventListener('submit', function (e) {
         e.preventDefault();
-        const id = document.getElementById('ipdcDebitId').value;
-        const data = {
-            venue: document.getElementById('ipdcVenue').value,
-            minute_no: document.getElementById('ipdcMinuteNo').value,
-            members: document.getElementById('ipdcMembers').value,
-            opening_prayer: document.getElementById('ipdcOpeningPrayer').value,
-            closing_prayer: document.getElementById('ipdcClosingPrayer').value
-        };
+        try {
+            const idInput = document.getElementById('ipdcDebitId');
+            if (!idInput || !idInput.value) {
+                alert('Error: No expenditure ID found. Please close and reopen the modal.');
+                return;
+            }
+            const id = idInput.value;
+            
+            // Collect quotations
+            const quotes = [];
+            const selectedRadio = document.querySelector('input[name="single_selected_quote"]:checked');
+            if (!selectedRadio) {
+                alert('Please select which quotation was successful.');
+                return;
+            }
+            const selectedIdx = selectedRadio.value;
 
-        fetch('/save_ipdc/' + id, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                closeIpdcModal();
-                // Open the print view in a new window
-                window.open('/ipdc_minute/' + id, '_blank');
-                // Refresh background to update data attributes
-                setTimeout(() => window.location.reload(), 500);
-            } else {
-                alert('Error saving details: ' + result.error);
+            for (let i = 1; i <= 3; i++) {
+                const nameInput = document.getElementById(`sq_name_${i}`);
+                const amountInput = document.getElementById(`sq_amount_${i}`);
+                if (nameInput && nameInput.value.trim()) {
+                    quotes.push({
+                        name: nameInput.value.trim(),
+                        amount: amountInput ? amountInput.value : 0,
+                        is_selected: (i == selectedIdx)
+                    });
+                }
+            }
+
+            const data = {
+                venue: document.getElementById('ipdcVenue').value,
+                minute_no: document.getElementById('ipdcMinuteNo').value,
+                members: document.getElementById('ipdcMembers').value,
+                opening_prayer: document.getElementById('ipdcOpeningPrayer').value,
+                closing_prayer: document.getElementById('ipdcClosingPrayer').value,
+                quotations: JSON.stringify({
+                    reason: document.getElementById('ipdcReason').value,
+                    quotes: quotes
+                })
+            };
+
+            console.log("Saving Single IPDC Data:", data);
+
+            fetch('/persist_ipdc/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Server returned ' + response.status);
+                return response.json();
+            })
+            .then(result => {
+                if (result.success) {
+                    closeIpdcModal();
+                    window.open('/ipdc_minute/' + id, '_blank');
+                    setTimeout(() => window.location.reload(), 500);
+                } else {
+                    alert('Error saving details: ' + (result.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error("Fetch error:", err);
+                alert('Network error or server failed to respond. Please check your connection.');
+            });
+        } catch (err) {
+            console.error("Submission error:", err);
+            alert('A JavaScript error occurred. Please check the browser console for details.');
+        }
+    });
+    // Combined IPDC Functions
+    function showCombinedIpdcModal() {
+        refreshCombinedIpdcNumber();
+        document.getElementById('combinedIpdcModal').classList.remove('hidden');
+    }
+
+    function closeCombinedIpdcModal() {
+        document.getElementById('combinedIpdcModal').classList.add('hidden');
+        document.querySelectorAll('.combined-debit-checkbox').forEach(cb => cb.checked = false);
+        document.getElementById('selectAllDebits').checked = false;
+        updateCombinedTotal();
+    }
+
+    function toggleAllDebits(masterCheckbox) {
+        document.querySelectorAll('.combined-debit-checkbox').forEach(cb => {
+            cb.checked = masterCheckbox.checked;
+        });
+        updateCombinedTotal();
+    }
+
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('combined-debit-checkbox')) {
+            updateCombinedTotal();
+        }
+    });
+
+    function updateCombinedTotal() {
+        let total = 0;
+        const selectedCheckboxes = document.querySelectorAll('.combined-debit-checkbox:checked');
+        const container = document.getElementById('quotationsContainer');
+        
+        // Show/Hide container based on selection
+        if (selectedCheckboxes.length > 0) {
+            container.classList.remove('hidden');
+        } else {
+            container.classList.add('hidden');
+        }
+
+        // Sync quotation fields
+        const existingSections = Array.from(container.querySelectorAll('.quote-section')).map(s => s.getAttribute('data-id'));
+        const selectedIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+        // Remove sections for unchecked boxes
+        container.querySelectorAll('.quote-section').forEach(section => {
+            if (!selectedIds.includes(section.getAttribute('data-id'))) {
+                section.remove();
             }
         });
+
+        // Add sections for new checked boxes
+        selectedCheckboxes.forEach(cb => {
+            total += parseFloat(cb.getAttribute('data-amount')) || 0;
+            
+            if (!existingSections.includes(cb.value)) {
+                const subItem = cb.getAttribute('data-desc');
+                const supplier = cb.getAttribute('data-supplier');
+                const amount = cb.getAttribute('data-amount');
+                
+                const section = document.createElement('div');
+                section.className = 'quote-section bg-gray-50 p-4 rounded-lg border border-gray-200';
+                section.setAttribute('data-id', cb.value);
+                section.innerHTML = `
+                    <div class="mb-4">
+                        <h5 class="font-bold text-orange-700 text-lg border-b-2 border-orange-100 pb-1">${subItem}</h5>
+                    </div>
+                    <div class="space-y-4">
+                        <!-- Input Section -->
+                        <div class="bg-gray-50 p-3 rounded-md border border-gray-100">
+                            <div class="grid grid-cols-12 gap-3 mb-3">
+                                <div class="col-span-8">
+                                    <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1">Supplier Name 1</label>
+                                    <input type="text" class="q-name-1 w-full text-sm border-gray-300 rounded shadow-sm focus:ring-orange-500" 
+                                        placeholder="Enter Supplier Name" value="${supplier}" oninput="updateQuoteLabels('${cb.value}')">
+                                </div>
+                                <div class="col-span-4">
+                                    <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1">Total Amount</label>
+                                    <input type="number" step="0.01" class="q-amount-1 w-full text-sm border-gray-300 rounded shadow-sm" 
+                                        placeholder="K0.00" value="${amount}">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-12 gap-3 mb-3">
+                                <div class="col-span-8">
+                                    <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1">Supplier Name 2</label>
+                                    <input type="text" class="q-name-2 w-full text-sm border-gray-300 rounded shadow-sm" 
+                                        placeholder="Enter Supplier Name" oninput="updateQuoteLabels('${cb.value}')">
+                                </div>
+                                <div class="col-span-4">
+                                    <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1">Total Amount</label>
+                                    <input type="number" step="0.01" class="q-amount-2 w-full text-sm border-gray-300 rounded shadow-sm" placeholder="K0.00">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-12 gap-3">
+                                <div class="col-span-8">
+                                    <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1">Supplier Name 3</label>
+                                    <input type="text" class="q-name-3 w-full text-sm border-gray-300 rounded shadow-sm" 
+                                        placeholder="Enter Supplier Name" oninput="updateQuoteLabels('${cb.value}')">
+                                </div>
+                                <div class="col-span-4">
+                                    <label class="block text-[10px] uppercase text-gray-500 font-bold mb-1">Total Amount</label>
+                                    <input type="number" step="0.01" class="q-amount-3 w-full text-sm border-gray-300 rounded shadow-sm" placeholder="K0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Selection Section -->
+                        <div class="bg-blue-50 p-4 rounded-md border border-blue-100 shadow-inner">
+                            <label class="block text-xs font-bold text-blue-800 mb-3 uppercase tracking-wider">Tick the selected supplier:</label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <label class="relative flex items-center p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors">
+                                    <input type="radio" name="selected_quote_${cb.value}" value="1" checked class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300">
+                                    <span class="ml-3 block text-sm font-medium text-gray-900 q-label-1 truncate">${supplier || 'Quotation 1'}</span>
+                                </label>
+                                <label class="relative flex items-center p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors">
+                                    <input type="radio" name="selected_quote_${cb.value}" value="2" class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300">
+                                    <span class="ml-3 block text-sm font-medium text-gray-900 q-label-2 truncate">Quotation 2</span>
+                                </label>
+                                <label class="relative flex items-center p-3 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-orange-50 transition-colors">
+                                    <input type="radio" name="selected_quote_${cb.value}" value="3" class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300">
+                                    <span class="ml-3 block text-sm font-medium text-gray-900 q-label-3 truncate">Quotation 3</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mt-2">
+                            <label class="block text-xs font-bold text-gray-600 mb-1">Reason for selection</label>
+                            <input type="text" class="q-reason w-full text-sm border-gray-300 rounded mt-1 shadow-sm" 
+                                placeholder="e.g. Lowest price / Quality of products" value="Lowest price and meeting all specifications">
+                        </div>
+                    </div>
+                `;
+                container.appendChild(section);
+            }
+        });
+
+        document.getElementById('combinedTotal').textContent = 'Selected: K' + total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function updateQuoteLabels(id) {
+        const section = document.querySelector(`.quote-section[data-id="${id}"]`);
+        if (!section) return;
+
+        for (let i = 1; i <= 3; i++) {
+            const name = section.querySelector(`.q-name-${i}`).value.trim();
+            const label = section.querySelector(`.q-label-${i}`);
+            if (name) {
+                label.textContent = name;
+            } else {
+                label.textContent = `Quotation ${i}`;
+            }
+        }
+    }
+
+    function updateSingleQuoteLabels() {
+        for (let i = 1; i <= 3; i++) {
+            const name = document.getElementById(`sq_name_${i}`).value.trim();
+            const label = document.querySelector(`.sq-label-${i}`);
+            if (name) {
+                label.textContent = name;
+            } else {
+                label.textContent = `Quotation ${i}`;
+            }
+        }
+    }
+
+    function refreshCombinedIpdcNumber() {
+        fetch('/get_next_ipdc_number')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('combinedMinuteNo').value = data.number;
+                }
+            });
+    }
+
+    document.getElementById('combinedIpdcForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        try {
+            const selectedSections = document.querySelectorAll('.quote-section');
+            if (selectedSections.length < 2) {
+                alert('Please select at least 2 expenditures to combine.');
+                return;
+            }
+
+            const meetingData = {
+                venue: document.getElementById('combinedVenue').value,
+                minute_no: document.getElementById('combinedMinuteNo').value,
+                members: document.getElementById('combinedMembers').value,
+                opening_prayer: document.getElementById('combinedOpeningPrayer').value,
+                closing_prayer: document.getElementById('combinedClosingPrayer').value
+            };
+
+            const itemQuotations = [];
+            selectedSections.forEach(section => {
+                const id = section.getAttribute('data-id');
+                const radioSelector = `input[name="selected_quote_${id}"]:checked`;
+                const selectedRadio = section.querySelector(radioSelector);
+                
+                if (!selectedRadio) {
+                    console.warn(`No selection for item ${id}`);
+                    return;
+                }
+                
+                const selectedIdx = selectedRadio.value;
+                const quotes = [];
+                for (let i = 1; i <= 3; i++) {
+                    const nameInput = section.querySelector(`.q-name-${i}`);
+                    const amountInput = section.querySelector(`.q-amount-${i}`);
+                    if (nameInput && nameInput.value.trim()) {
+                        quotes.push({
+                            name: nameInput.value.trim(),
+                            amount: amountInput ? amountInput.value : 0,
+                            is_selected: (i == selectedIdx)
+                        });
+                    }
+                }
+                
+                itemQuotations.push({
+                    debit_id: id,
+                    reason: section.querySelector('.q-reason').value,
+                    quotes: quotes
+                });
+            });
+
+            console.log("Saving Combined IPDC Data:", { meeting: meetingData, items: itemQuotations });
+
+            fetch('/save_combined_ipdc_data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    meeting: meetingData,
+                    items: itemQuotations
+                })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Server error ' + response.status);
+                return response.json();
+            })
+            .then(result => {
+                if (result.success) {
+                    closeCombinedIpdcModal();
+                    window.open('/combined_ipdc?session_id=' + result.session_id, '_blank');
+                } else {
+                    alert('Error: ' + (result.error || 'Unknown error'));
+                }
+            })
+            .catch(err => {
+                console.error("Fetch error:", err);
+                alert('Network error. Failed to send data to server.');
+            });
+        } catch (err) {
+            console.error("Combined Submit Error:", err);
+            alert('A JavaScript error occurred. See console for details.');
+        }
     });
 </script>
 {% endblock %}

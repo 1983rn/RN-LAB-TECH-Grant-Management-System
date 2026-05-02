@@ -99,6 +99,11 @@
                         <i class="fas fa-arrow-down w-4"></i>
                         <span>Debit Register</span>
                     </a>
+                    <a href="{{ url_for('itemized') }}"
+                        class="flex items-center space-x-2 px-3 py-2 rounded {% if current_page == 'itemized' %}bg-orange-600{% else %}hover:bg-slate-800{% endif %}">
+                        <i class="fas fa-list w-4"></i>
+                        <span>Itemized</span>
+                    </a>
                     <a href="{{ url_for('tracking') }}"
                         class="flex items-center space-x-2 px-3 py-2 rounded {% if current_page == 'tracking' %}bg-purple-600{% else %}hover:bg-slate-800{% endif %}">
                         <i class="fas fa-chart-bar w-4"></i>

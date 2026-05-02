@@ -215,24 +215,38 @@
             </tr>
         </thead>
         <tbody>
-            {% set names_list = debit.supplierName.split('\n') if '\n' in debit.supplierName else debit.supplierName.split(',') %}
-            {% set total_amount = debit.amount %}
-            {% set per_person = total_amount / names_list|length if names_list|length > 0 else total_amount %}
+            {% set names_list = debit.supplierName.split('\n') %}
             
-            {% for name in names_list %}
-            {% if name.strip() %}
+            {% for entry in names_list %}
+            {% if entry.strip() %}
             <tr>
-                <td>{{ name.strip() }}</td>
+                {% if '=' in entry %}
+                <td>{{ entry.split('=')[0].strip() }}</td>
                 <td>{{ debit.position }}</td>
                 <td style="text-align: center;">-</td>
                 <td style="text-align: center;">-</td>
                 <td style="text-align: right;">-</td>
-                <td style="text-align: right; font-weight: bold;">K{{ "{:,.2f}".format(per_person) }}</td>
+                <td style="text-align: right; font-weight: bold;">K{{ "{:,.2f}".format(entry.split('=')[1].strip()|float) }}</td>
                 <td>-</td>
                 <td>-</td>
+                {% else %}
+                <td>{{ entry.strip() }}</td>
+                <td>{{ debit.position }}</td>
+                <td style="text-align: center;">-</td>
+                <td style="text-align: center;">-</td>
+                <td style="text-align: right;">-</td>
+                <td style="text-align: right; font-weight: bold;">K{{ "{:,.2f}".format(debit.amount) }}</td>
+                <td>-</td>
+                <td>-</td>
+                {% endif %}
             </tr>
             {% endif %}
             {% endfor %}
+            <tr style="font-weight: bold; background-color: #f2f2f2;">
+                <td colspan="5" style="text-align: right;">TOTAL</td>
+                <td style="text-align: right;">K{{ "{:,.2f}".format(debit.amount) }}</td>
+                <td colspan="2"></td>
+            </tr>
         </tbody>
     </table>
 
@@ -262,20 +276,23 @@
             </tr>
         </thead>
         <tbody>
-            {% set raw_names = debit.supplierName.split('\n') if '\n' in debit.supplierName else debit.supplierName.split(',') %}
+            {% set raw_names = debit.supplierName.split('\n') %}
             {% set clean_names = [] %}
             {% for name in raw_names %}
                 {% if name.strip() %}
                     {% set _ = clean_names.append(name.strip()) %}
                 {% endif %}
             {% endfor %}
-            {% set is_multiple = clean_names|length > 1 %}
-            {% set per_person = debit.amount / clean_names|length if clean_names|length > 0 else debit.amount %}
             
-            {% for name in clean_names %}
+            {% for entry in clean_names %}
             <tr>
-                <td>{{ name }}</td>
-                <td style="text-align: right;">K{{ "{:,.2f}".format(per_person) }}</td>
+                {% if '=' in entry %}
+                <td>{{ entry.split('=')[0].strip() }}</td>
+                <td style="text-align: right;">K{{ "{:,.2f}".format(entry.split('=')[1].strip()|float) }}</td>
+                {% else %}
+                <td>{{ entry }}</td>
+                <td style="text-align: right;">K{{ "{:,.2f}".format(debit.amount) }}</td>
+                {% endif %}
             </tr>
             {% endfor %}
             <tr style="font-weight: bold;">

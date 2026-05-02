@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Itemized Budget{% endblock %}
+
+{% block content %}
+<!-- Print Header (hidden on screen, visible on print) -->
+<div class="print-header" style="display: none;">
+    <img src="{{ url_for('static', filename='images/Malawi Government logo.png') }}" alt="Malawi Government">
+    <h1>ITEMIZED BUDGET REPORT {{ settings.schoolName if settings and settings.schoolName else settings.ministry if settings else 'School' }}</h1>
+    <div class="school-info">{{ (settings.ministry if settings else 'NANJATI CDSS') }} | {{ academic_year }} {{ term }}</div>
+</div>
+
+<style>
+    @media print {
+        @page {
+            size: A4 landscape;
+            margin: 1cm;
+        }
+
+        /* Print Header */
+        body::before {
+            content: "";
+            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: white;
+            border-bottom: 2px solid #000;
+            z-index: 1000;
+        }
+
+        .print-header {
+            display: block !important;
+            position: fixed;
+            top: 10px;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: white;
+            z-index: 1001;
+            padding: 0 20px;
+        }
+
+        .print-header img {
+            height: 40px;
+            float: left;
+            margin-top: 5px;
+        }
+
+        .print-header h1 {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 5px 0;
+            line-height: 1.2;
+        }
+
+        .print-header .school-info {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        /* Adjust content for header */
+        .max-w-full {
+            margin-top: 90px !important;
+        }
+
+        /* Hide scrollbars */
+        body {
+            overflow: visible !important;
+        }
+
+        * {
+            overflow: visible !important;
+        }
+
+        .overflow-x-auto {
+            overflow: visible !important;
+            max-height: none !important;
+        }
+
+        ::-webkit-scrollbar {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+
+        button {
+            display: none !important;
+        }
+
+        .bg-white {
+            border: none !important;
+        }
+
+        table {
+            font-size: 10px;
+        }
+
+        th,
+        td {
+            padding: 4px 6px !important;
+        }
+    }
+</style>
+
+<div class="max-w-full">
+    <!-- Header -->
+    <div class="bg-white p-4 border-b border-gray-300">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Itemized Budget</h2>
+                <p class="text-gray-500 text-sm mt-1">Budget allocation vs monthly expenditure per item for {{ academic_year }} {{ term }}</p>
+            </div>
+            <div class="space-x-2 no-print">
+                <button onclick="printPage('Itemized Budget Report')"
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-print mr-2"></i>Print Report
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="bg-white border-t border-gray-200">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sub Item Description</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total Allocation</th>
+                        {% for month in term_months %}
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">{{ month }}</th>
+                        {% endfor %}
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-red-50">Amount Used</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-green-50">Balance</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if itemized_data %}
+                    {% for item in itemized_data %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-3 text-sm text-gray-900 font-medium">{{ item.subItemDescription }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-500 font-mono text-xs">{{ item.code }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-900 text-right font-semibold">K{{ "{:,.2f}".format(item.totalAllocation) }}</td>
+                        {% for month in term_months %}
+                        <td class="px-4 py-3 text-sm text-right {% if item.month_amounts[month] > 0 %}text-red-600 font-semibold{% else %}text-gray-400{% endif %}">
+                            {% if item.month_amounts[month] > 0 %}
+                            K{{ "{:,.2f}".format(item.month_amounts[month]) }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="px-4 py-3 text-sm text-right font-bold text-red-600 bg-red-50">K{{ "{:,.2f}".format(item.totalUsed) }}</td>
+                        <td class="px-4 py-3 text-sm text-right font-bold bg-green-50 {% if item.balance < 0 %}text-red-600{% elif item.balance == 0 %}text-gray-500{% else %}text-green-600{% endif %}">
+                            K{{ "{:,.2f}".format(item.balance) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <!-- Totals Row -->
+                    <tr class="bg-gray-100 font-bold border-t-2 border-gray-400">
+                        <td class="px-4 py-3 text-sm text-gray-900" colspan="2">GRAND TOTALS</td>
+                        <td class="px-4 py-3 text-sm text-gray-900 text-right">K{{ "{:,.2f}".format(totals.totalAllocation) }}</td>
+                        {% for month in term_months %}
+                        <td class="px-4 py-3 text-sm text-right text-red-700">
+                            {% if totals.monthly_totals[month] > 0 %}
+                            K{{ "{:,.2f}".format(totals.monthly_totals[month]) }}
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                        <td class="px-4 py-3 text-sm text-right text-red-700 bg-red-100">K{{ "{:,.2f}".format(totals.totalUsed) }}</td>
+                        <td class="px-4 py-3 text-sm text-right bg-green-100 {% if totals.balance < 0 %}text-red-700{% else %}text-green-700{% endif %}">
+                            K{{ "{:,.2f}".format(totals.balance) }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="{{ 5 + term_months|length }}" class="px-6 py-12 text-center text-gray-500">
+                            <i class="fas fa-list text-4xl mb-4 text-gray-300"></i>
+                            <p class="text-lg">No budget items found</p>
+                            <p class="text-sm mt-2">Set up your budget allocation first to see itemized spending.</p>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -301,7 +301,8 @@ def get_school_debits(school_id, academic_year, term):
                 'ipdcMinuteNo': row_dict.get('ipdc_minute_no', ''),
                 'ipdcMembers': row_dict.get('ipdc_members', ''),
                 'ipdcOpeningPrayer': row_dict.get('ipdc_opening_prayer', ''),
-                'ipdcClosingPrayer': row_dict.get('ipdc_closing_prayer', '')
+                'ipdcClosingPrayer': row_dict.get('ipdc_closing_prayer', ''),
+                'ipdcQuotations': row_dict.get('ipdc_quotations', '')
             }
             debits.append(debit)
         
@@ -461,7 +462,8 @@ def update_debit_ipdc_fields(school_id, debit_id, ipdc_data):
                 ipdc_minute_no = ?,
                 ipdc_members = ?,
                 ipdc_opening_prayer = ?,
-                ipdc_closing_prayer = ?
+                ipdc_closing_prayer = ?,
+                ipdc_quotations = ?
             WHERE id = ? AND school_id = ?
         ''', (
             ipdc_data.get('venue', ''),
@@ -469,6 +471,7 @@ def update_debit_ipdc_fields(school_id, debit_id, ipdc_data):
             ipdc_data.get('members', ''),
             ipdc_data.get('opening_prayer', ''),
             ipdc_data.get('closing_prayer', ''),
+            ipdc_data.get('quotations', ''),
             numeric_id,
             school_id
         ))

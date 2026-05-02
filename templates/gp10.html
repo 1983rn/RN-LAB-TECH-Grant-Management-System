@@ -185,7 +185,24 @@
         <div class="row" style="min-height: 100px;">
             <div class="col" style="flex: 1;">
                 <span class="box-title">Name of the supplier, service provider or person receiving the funds</span>
-                <div class="field-content" style="font-weight: bold;">{{ debit.supplierName.split(',')[0].strip() }}</div>
+                {% set names_list = debit.supplierName.split('\n') %}
+                {% if names_list|length > 1 %}
+                    {% for entry in names_list %}
+                        {% if entry.strip() %}
+                            {% if '=' in entry %}
+                                <div style="font-weight: bold;">{{ entry.split('=')[0].strip() }}</div>
+                            {% else %}
+                                <div style="font-weight: bold;">{{ entry.strip() }}</div>
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    {% if '=' in debit.supplierName %}
+                        <div class="field-content" style="font-weight: bold;">{{ debit.supplierName.split('=')[0].strip() }}</div>
+                    {% else %}
+                        <div class="field-content" style="font-weight: bold;">{{ debit.supplierName }}</div>
+                    {% endif %}
+                {% endif %}
                 <div style="margin-top: 20px;"><strong>FOR:</strong> {{ budget.schoolName }}</div>
             </div>
             <div class="col" style="flex: 1;">
@@ -206,48 +223,42 @@
         </div>
         <div class="row" style="min-height: 300px;">
             <div class="col" style="flex: 3; position: relative;">
-                {% set desc_lines = debit.description.split('\n') %}
-                {% set names_list = debit.supplierName.split('\n') if '\n' in debit.supplierName else debit.supplierName.split(',') %}
-                {% set has_multiple_names = names_list|length > 1 %}
                 <div style="margin-bottom: 15px; line-height: 1.5;">
                     BEING PAYMENT TO THE ABOVE NAMED ADDRESSEE FOR <span style="text-decoration: underline;">{{
-                        desc_lines[0].strip() }}</span> AS PER ATTACHED SUPPORTING DOCUMENTS.
+                        debit.description }}</span> AS PER ATTACHED SUPPORTING DOCUMENTS.
                 </div>
 
-                {% if desc_lines|length > 1 %}
-                {# Option 1: Description has multi-line breakdown typed by user #}
-                <div style="margin-left: 20px; font-size: 13px; margin-bottom: 15px;">
-                    {% for line in desc_lines[1:] %}
-                    {% if line.strip() %}
-                    <div style="display: flex; width: 350px; margin-bottom: 4px;">
-                        {% if '=' in line %}
-                        {% set parts = line.split('=', 1) %}
-                        <span style="flex: 1;">{{ parts[0].strip() }}</span>
-                        <span style="width: 20px; text-align: center;">=</span>
-                        <span style="width: 80px; text-align: right;">{{ parts[1].strip() }}</span>
-                        {% else %}
-                        <span>{{ line.strip() }}</span>
-                        {% endif %}
-                    </div>
+                {% set suppliers = debit.supplierName.split('\n') %}
+                {% set has_amounts = [] %}
+                {% for s in suppliers %}
+                    {% if s.strip() and '=' in s %}
+                        {% set _ = has_amounts.append(s.strip()) %}
                     {% endif %}
+                {% endfor %}
+
+                {% if has_amounts|length > 0 %}
+                {# Payees with individual amounts from Name=Amount format #}
+                <div style="margin-left: 20px; font-size: 13px; margin-bottom: 15px;">
+                    {% for entry in has_amounts %}
+                        {% set parts = entry.split('=', 1) %}
+                        <div style="display: flex; width: 400px; margin-bottom: 4px;">
+                            <span style="flex: 1;">{{ parts[0].strip() }}</span>
+                            <span style="width: 20px; text-align: center;">=</span>
+                            <span style="width: 120px; text-align: right;">K {{ "{:,.2f}".format(parts[1].strip()|float) }}</span>
+                        </div>
                     {% endfor %}
                 </div>
-                {% elif has_multiple_names %}
-                {# Option 2: Multiple comma-separated names in supplier field - auto split #}
+                {% elif suppliers|length > 1 %}
+                {# Multiple names without amounts - show names only #}
                 <div style="margin-left: 20px; font-size: 13px; margin-bottom: 15px;">
-                    {% set per_person = debit.amount / names_list|length %}
-                    {% for name in names_list %}
+                    {% for name in suppliers %}
                     {% if name.strip() %}
-                    <div style="display: flex; width: 350px; margin-bottom: 4px;">
-                        <span style="flex: 1;">{{ name.strip() }}</span>
-                        <span style="width: 20px; text-align: center;">=</span>
-                        <span style="width: 100px; text-align: right;">{{ "{:,.2f}".format(per_person) }}</span>
-                    </div>
+                    <div>{{ name.strip() }}</div>
                     {% endif %}
                     {% endfor %}
                 </div>
                 {% else %}
-                {# Option 3: Single person, single line #}
+                {# Single person, single line #}
                 <div style="display: flex; justify-content: space-between;">
                     <span>{{ debit.subItemDescription }} - {{ debit.supplierName }} (MWK {{
                         "{:,.2f}".format(debit.amount) }})</span>

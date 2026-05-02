@@ -263,7 +263,14 @@
             </div>
             <div class="detail-row">
                 <span class="detail-label">Payee Name:</span>
-                <span class="detail-value" style="font-weight: bold; white-space: pre-wrap;">{{ debit.supplierName }}</span>
+                <span class="detail-value" style="font-weight: bold;">
+                    {% set names_list = debit.supplierName.split('\n') %}
+                    {% for entry in names_list %}
+                        {% if entry.strip() %}
+                            {% if '=' in entry %}{{ entry.split('=')[0].strip() }}{% else %}{{ entry.strip() }}{% endif %}{% if not loop.last %}, {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                </span>
             </div>
             <div class="detail-row">
                 <span class="detail-label">Activity/Service:</span>
@@ -279,7 +286,7 @@
             </div>
         </div>
 
-        {% set raw_names = debit.supplierName.split('\n') if '\n' in debit.supplierName else debit.supplierName.split(',') %}
+        {% set raw_names = debit.supplierName.split('\n') %}
         {% set clean_names = [] %}
         {% for name in raw_names %}
             {% if name.strip() %}
@@ -287,7 +294,6 @@
             {% endif %}
         {% endfor %}
         {% set is_multiple = clean_names|length > 1 %}
-        {% set per_person = debit.amount / clean_names|length if clean_names|length > 0 else debit.amount %}
 
         {% if is_multiple %}
         <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; background-color: #f8f9fa; padding: 10px; margin: 20px 0;">
@@ -303,10 +309,15 @@
         {% if is_multiple %}
         <div style="border-top: 2px dashed #ccc; margin-bottom: 20px;"></div>
         <div class="payees-list" style="margin-bottom: 30px;">
-            {% for name in clean_names %}
+            {% for entry in clean_names %}
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: bold; font-size: 14px;">
-                <div style="width: 40%;">{{ name }}</div>
-                <div style="width: 25%;">{{ "{:,.2f}".format(per_person) }}</div>
+                {% if '=' in entry %}
+                <div style="width: 40%;">{{ entry.split('=')[0].strip() }}</div>
+                <div style="width: 25%;">K{{ "{:,.2f}".format(entry.split('=')[1].strip()|float) }}</div>
+                {% else %}
+                <div style="width: 40%;">{{ entry }}</div>
+                <div style="width: 25%;">K{{ "{:,.2f}".format(debit.amount) }}</div>
+                {% endif %}
                 <div style="width: 35%; border-bottom: 1px dashed #000; height: 1em;"></div>
             </div>
             {% endfor %}

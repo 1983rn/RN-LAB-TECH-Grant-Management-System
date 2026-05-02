@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combined IPDC Minute - {{ meeting.minute_no }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 2cm;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+        .meta-info {
+            margin-bottom: 20px;
+        }
+        .meta-row {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .meta-label {
+            font-weight: bold;
+            width: 120px;
+        }
+        .meta-value {
+            border-bottom: 1px solid #000;
+            flex-grow: 1;
+            padding-left: 10px;
+        }
+        .section-title {
+            font-weight: bold;
+            text-decoration: underline;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .content-block {
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+        .agenda-list {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        .agenda-list li {
+            margin-bottom: 3px;
+        }
+        .members-list {
+            margin-left: 20px;
+            list-style-type: disc;
+        }
+        .members-list li {
+            margin-bottom: 3px;
+        }
+        .item-section {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .item-heading {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .supplier-table {
+            margin-left: 30px;
+            margin-bottom: 10px;
+        }
+        .supplier-row {
+            display: flex;
+            margin-bottom: 3px;
+        }
+        .supplier-name {
+            flex: 1;
+        }
+        .supplier-amount {
+            width: 180px;
+            text-align: left;
+            padding-left: 20px;
+        }
+        .decision-block {
+            margin-top: 10px;
+            text-align: justify;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                padding: 0;
+            }
+        }
+        .btn-print {
+            background-color: #EA580C;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            font-family: sans-serif;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+        .btn-print:hover {
+            background-color: #C2410C;
+        }
+        .font-bold {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <button onclick="window.print()" class="btn-print no-print">Print Document</button>
+
+    <div class="header">
+        {{ settings.schoolName or 'School Name' }} IPDC MEETING
+    </div>
+
+    <div class="meta-info">
+        <div class="meta-row">
+            <span class="meta-label">Date:</span>
+            <span class="meta-value">{{ meeting.date }}</span>
+        </div>
+        <div class="meta-row">
+            <span class="meta-label">Venue:</span>
+            <span class="meta-value">{{ meeting.venue or '................................................' }}</span>
+        </div>
+        <div style="text-align: center; font-weight: bold; margin: 15px 0; font-size: 1em;">
+            MINUTES NO. {{ meeting.minute_no or '001 / (Year)' }}
+            <div style="font-size: 0.8em; color: #444; margin-top: 3px;">{{ meeting.academicYear }} | {{ meeting.term }}</div>
+        </div>
+    </div>
+
+    <div class="section-title">Members present</div>
+    <ul class="members-list">
+        {% if meeting.members %}
+            {% for member in meeting.members.split('\n') %}
+                {% if member.strip() %}
+                    <li>{{ member.strip() }}</li>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <li>................................................................</li>
+            <li>................................................................</li>
+            <li>................................................................</li>
+        {% endif %}
+    </ul>
+
+    <div class="section-title">Opening prayer.</div>
+    <div class="content-block">
+        The meeting was opened with a prayer by: <strong>{{ meeting.opening_prayer or '................................' }}</strong>.
+    </div>
+
+    <div class="section-title">Welcome remarks.</div>
+    <div class="content-block">
+        The chair welcomed all members present and asked for their input during the meeting.
+    </div>
+
+    <div class="section-title">Agenda</div>
+    <ol class="agenda-list">
+        {% for item in items %}
+        <li>{{ item.debit.subItemDescription }}</li>
+        {% endfor %}
+    </ol>
+
+    <div class="content-block">
+        After a lengthy discussions and scrutiny of quotations, the committee came up with the following:
+    </div>
+
+    {% for item in items %}
+    <div class="item-section">
+        <div class="item-heading">{{ loop.index }}. {{ item.debit.subItemDescription|upper }}</div>
+        
+        <div class="supplier-table">
+            {% for quote in item.quotes %}
+            <div class="supplier-row {% if quote.is_selected %}font-bold{% endif %}">
+                <span class="supplier-name">
+                    &bull; {{ quote.name }}
+                    {% if quote.is_selected %} <strong style="font-size: 0.9em; color: #111;">(Selected)</strong>{% endif %}
+                </span>
+                <span class="supplier-amount">K {{ "{:,.2f}".format(quote.amount|float) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="decision-block">
+            <strong>Decision:</strong> {{ item.reason or 'The committee decided to procure from the selected supplier after reviewing prices and specifications.' }}
+            <br>
+            <span style="font-size: 0.9em; color: #555;">(Purpose: {{ item.debit.description }})</span>
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="section-title">Closing remarks</div>
+    <div class="content-block">
+        The chair thanked all members present for their input during the meeting.
+    </div>
+
+    <div style="margin-bottom: 5px;">
+        Closing prayer: <strong>{{ meeting.closing_prayer or '................................' }}</strong>.
+    </div>
+
+    <div class="section-title" style="margin-top: 40px;">Members in attendance</div>
+    <div style="display: block; margin-top: 15px;">
+        <div style="display: flex; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px;">
+            <div style="flex: 1;">Name</div>
+            <div style="width: 300px; padding-left: 20px;">Signature</div>
+        </div>
+        {% if meeting.members %}
+            {% for member in meeting.members.split('\n') %}
+                {% if member.strip() %}
+                <div style="display: flex; align-items: flex-end; margin-bottom: 15px; width: 100%;">
+                    <div style="flex: 1; border-bottom: 1px dotted transparent;">{{ member.strip() }}</div>
+                    <div style="width: 300px; border-bottom: 1px solid #000; margin-left: 20px;">&nbsp;</div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <div style="display: flex; align-items: flex-end; margin-bottom: 15px; width: 100%;">
+                <div style="flex: 1; border-bottom: 1px dotted transparent;">................................................</div>
+                <div style="width: 300px; border-bottom: 1px solid #000; margin-left: 20px;">&nbsp;</div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div style="margin-top: 40px; font-size: 0.8em; color: #666; text-align: center;" class="no-print">
+        Generated on <span id="generation-time"></span>
+    </div>
+    <script>
+        document.getElementById('generation-time').textContent = new Date().toLocaleString();
+    </script>
+</body>
+</html>
