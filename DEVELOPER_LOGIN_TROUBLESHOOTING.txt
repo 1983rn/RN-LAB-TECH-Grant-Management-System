@@ -1,0 +1,208 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                   DEVELOPER LOGIN TROUBLESHOOTING GUIDE                      ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+PROBLEM: "Invalid developer credentials" error when logging in
+
+═══════════════════════════════════════════════════════════════════════════════
+QUICK FIX (RECOMMENDED)
+═══════════════════════════════════════════════════════════════════════════════
+
+Run this batch file:
+   Fix_Developer_Login.bat
+
+This will:
+   ✅ Recreate developer account with correct credentials
+   ✅ Verify password hash is correct
+   ✅ Test login functionality
+   ✅ Display success confirmation
+
+═══════════════════════════════════════════════════════════════════════════════
+MANUAL FIX
+═══════════════════════════════════════════════════════════════════════════════
+
+Step 1: Run diagnostic
+   python diagnose_dev_login.py
+
+Step 2: Run fix script
+   python fix_dev_login.py
+
+Step 3: Restart application
+   Start_Application.bat
+
+═══════════════════════════════════════════════════════════════════════════════
+CORRECT CREDENTIALS
+═══════════════════════════════════════════════════════════════════════════════
+
+Username: juniornsambe@yahoo.com
+Password: blessings19831983/
+
+IMPORTANT NOTES:
+   • Username is an EMAIL address
+   • Password ends with a forward slash (/)
+   • No extra spaces before or after
+   • Case sensitive (use lowercase)
+
+═══════════════════════════════════════════════════════════════════════════════
+LOGIN STEPS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Open browser: http://localhost:5176
+
+2. Type "devaccess" anywhere on the login screen
+   (You'll see the screen turn RED)
+
+3. Email field auto-fills: juniornsambe@yahoo.com
+
+4. Enter password: blessings19831983/
+
+5. Click "Developer Login" button
+
+6. You should be redirected to Developer Dashboard
+
+═══════════════════════════════════════════════════════════════════════════════
+COMMON ISSUES & SOLUTIONS
+═══════════════════════════════════════════════════════════════════════════════
+
+ISSUE 1: Developer account doesn't exist in database
+SOLUTION: Run Fix_Developer_Login.bat
+
+ISSUE 2: Password hash mismatch
+SOLUTION: Run Fix_Developer_Login.bat
+
+ISSUE 3: Account is locked
+SOLUTION: Run Fix_Developer_Login.bat (sets is_locked = 0)
+
+ISSUE 4: Account is inactive
+SOLUTION: Run Fix_Developer_Login.bat (sets is_active = 1)
+
+ISSUE 5: Wrong school_name in database
+SOLUTION: Run Fix_Developer_Login.bat (sets school_name = 'DEVELOPER_ACCOUNT')
+
+ISSUE 6: Extra spaces in username/password
+SOLUTION: Auth.py now trims whitespace automatically
+
+═══════════════════════════════════════════════════════════════════════════════
+VERIFICATION STEPS
+═══════════════════════════════════════════════════════════════════════════════
+
+After running the fix, verify:
+
+1. Database exists:
+   ✅ data/grant_management.db file exists
+
+2. Developer account exists:
+   ✅ Run: python diagnose_dev_login.py
+   ✅ Should show "Developer account found"
+
+3. Password hash is correct:
+   ✅ Diagnostic shows "Password hashes MATCH"
+
+4. Login logic works:
+   ✅ Diagnostic shows "DEVELOPER LOGIN SHOULD WORK!"
+
+═══════════════════════════════════════════════════════════════════════════════
+DEBUG MODE
+═══════════════════════════════════════════════════════════════════════════════
+
+The auth.py file now includes debug logging. When you attempt to login,
+check the console output for:
+
+   [DEBUG] Developer login attempt: username='...', password_len=...
+   [DEBUG] Developer account found: id=..., active=..., locked=...
+   [DEBUG] Developer login successful
+
+If you see error messages, they will indicate the exact problem.
+
+═══════════════════════════════════════════════════════════════════════════════
+FILES CREATED TO FIX THIS ISSUE
+═══════════════════════════════════════════════════════════════════════════════
+
+1. fix_dev_login.py
+   → Recreates developer account with correct credentials
+
+2. diagnose_dev_login.py
+   → Diagnoses what's wrong with developer account
+
+3. Fix_Developer_Login.bat
+   → Quick fix batch file (double-click to run)
+
+4. DEVELOPER_LOGIN_TROUBLESHOOTING.txt
+   → This guide
+
+═══════════════════════════════════════════════════════════════════════════════
+WHAT WAS FIXED
+═══════════════════════════════════════════════════════════════════════════════
+
+1. ✅ Added whitespace trimming to username/password inputs
+2. ✅ Added debug logging to track login attempts
+3. ✅ Created fix script to recreate developer account
+4. ✅ Created diagnostic script to identify issues
+5. ✅ Updated Start_Application.bat to auto-verify developer account
+6. ✅ Added detailed error messages for debugging
+
+═══════════════════════════════════════════════════════════════════════════════
+TESTING AFTER FIX
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Run: Fix_Developer_Login.bat
+2. Run: Start_Application.bat
+3. Open: http://localhost:5176
+4. Type: devaccess
+5. Enter: juniornsambe@yahoo.com / blessings19831983/
+6. Click: Developer Login
+7. Expected: Redirect to Developer Dashboard
+
+═══════════════════════════════════════════════════════════════════════════════
+STILL NOT WORKING?
+═══════════════════════════════════════════════════════════════════════════════
+
+If the issue persists after running Fix_Developer_Login.bat:
+
+1. Delete the database:
+   del data\grant_management.db
+
+2. Run setup again:
+   python setup_auth.py
+
+3. Run fix:
+   python fix_dev_login.py
+
+4. Start application:
+   Start_Application.bat
+
+5. Try logging in again
+
+═══════════════════════════════════════════════════════════════════════════════
+CONTACT SUPPORT
+═══════════════════════════════════════════════════════════════════════════════
+
+If none of the above solutions work:
+
+Developer: RN-LAB-TECH-SOLUTIONS
+Phone:     +265991332952
+WhatsApp:  +265999630132
+Email:     robertnsambe@gmail.com
+
+Provide:
+   • Output from diagnose_dev_login.py
+   • Console output from application startup
+   • Screenshot of error message
+
+═══════════════════════════════════════════════════════════════════════════════
+                            FIX SUMMARY
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Developer account recreation script created
+✅ Diagnostic tool created
+✅ Debug logging added to auth.py
+✅ Whitespace trimming added
+✅ Quick fix batch file created
+✅ Auto-verification added to startup
+✅ Comprehensive troubleshooting guide created
+
+═══════════════════════════════════════════════════════════════════════════════
+                    RUN: Fix_Developer_Login.bat NOW!
+═══════════════════════════════════════════════════════════════════════════════

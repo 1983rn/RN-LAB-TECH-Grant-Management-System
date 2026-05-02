@@ -1,0 +1,36 @@
+{
+  "name": "grant-management-system-python",
+  "version": "1.0.0",
+  "description": "Grant Management System - Python Flask Version",
+  "main": "app.py",
+  "scripts": {
+    "start": "python app.py",
+    "dev": "python app.py",
+    "install": "pip install -r requirements.txt",
+    "test": "python -m pytest tests/",
+    "lint": "flake8 app.py"
+  },
+  "keywords": [
+    "grant",
+    "management",
+    "budget",
+    "flask",
+    "python",
+    "education",
+    "school"
+  ],
+  "author": "Grant Management System Team",
+  "license": "MIT",
+  "dependencies": {
+    "flask": "^2.3.3",
+    "flask-cors": "^4.0.0",
+    "werkzeug": "^2.3.7"
+  },
+  "devDependencies": {
+    "pytest": "^7.4.0",
+    "flake8": "^6.0.0"
+  },
+  "engines": {
+    "python": ">=3.8"
+  }
+}

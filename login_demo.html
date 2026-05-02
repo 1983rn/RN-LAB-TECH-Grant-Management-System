@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Dashboard Demo - Grant Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        
+        .malawi-gradient {
+            background: linear-gradient(135deg, #000000 0%, #DC143C 50%, #007A3D 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+    </style>
+</head>
+<body class="malawi-gradient min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-md fade-in">
+        <!-- Logo and Title -->
+        <div class="text-center mb-8">
+            <div class="bg-white rounded-full p-4 inline-block mb-4 shadow-2xl">
+                <div class="h-20 w-20 bg-gray-200 rounded-full flex items-center justify-center">
+                    <i class="fas fa-flag text-4xl text-gray-600"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl font-bold text-white mb-2 drop-shadow-lg">
+                Grant Management System
+            </h1>
+            <p class="text-white text-lg opacity-90">Malawi Secondary Schools</p>
+            <div class="mt-2 flex items-center justify-center space-x-2">
+                <div class="w-8 h-1 bg-black"></div>
+                <div class="w-8 h-1 bg-red-600"></div>
+                <div class="w-8 h-1 bg-green-600"></div>
+            </div>
+        </div>
+
+        <!-- Login Card -->
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 border border-white border-opacity-20">
+            <div class="text-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800" id="loginTitle">
+                    <i class="fas fa-school mr-2 text-blue-600"></i>School Login
+                </h2>
+                <p class="text-gray-600 text-sm mt-2">Enter your credentials to access the system</p>
+            </div>
+            
+            <!-- Demo Instructions -->
+            <div class="bg-blue-50 border-l-4 border-blue-500 text-blue-700 px-4 py-3 rounded mb-4">
+                <div class="flex items-center">
+                    <i class="fas fa-info-circle mr-3 text-xl"></i>
+                    <div class="text-sm">
+                        <p class="font-bold">Demo Mode</p>
+                        <p>Type <code class="bg-blue-200 px-1 rounded">devaccess</code> to activate developer mode</p>
+                    </div>
+                </div>
+            </div>
+
+            <form id="loginForm" class="space-y-5" onsubmit="handleDemo(event)">
+                <div>
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">
+                        <i class="fas fa-user mr-2 text-blue-600"></i>Username
+                    </label>
+                    <input type="text" id="username" required
+                           class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition duration-200"
+                           placeholder="Enter your username" autocomplete="username">
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">
+                        <i class="fas fa-lock mr-2 text-blue-600"></i>Password
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="password" required
+                               class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 transition duration-200"
+                               placeholder="Enter your password" autocomplete="current-password">
+                        <button type="button" onclick="togglePassword()" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-eye" id="toggleIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="loginBtn"
+                        class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login to System
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <a href="#" onclick="showForgotPassword()" class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    <i class="fas fa-question-circle mr-1"></i>Forgot Password?
+                </a>
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-gray-200 text-center text-xs text-gray-500">
+                <p><i class="fas fa-shield-alt mr-1"></i>Secure Login • Data Protected</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-8 text-white">
+            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-4 border border-white border-opacity-20">
+                <p class="font-semibold mb-2">
+                    <i class="fas fa-code mr-2"></i>Developed by RN-LAB-TECH-SOLUTIONS
+                </p>
+                <div class="flex flex-wrap justify-center gap-4 text-sm">
+                    <span><i class="fas fa-phone mr-1"></i>+265991332952</span>
+                    <span><i class="fab fa-whatsapp mr-1"></i>+265999630132</span>
+                    <span><i class="fas fa-envelope mr-1"></i>robertnsambe@gmail.com</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Password visibility toggle
+        function togglePassword() {
+            const passwordInput = document.getElementById('password');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        }
+        
+        // Forgot password handler
+        function showForgotPassword() {
+            alert('Please contact your system administrator or developer to reset your password.\n\nDeveloper Contact:\nEmail: robertnsambe@gmail.com\nPhone: +265991332952');
+        }
+        
+        // Secret developer access trigger
+        let devAccessSequence = '';
+        const devTrigger = 'devaccess';
+        let devModeActive = false;
+        
+        document.addEventListener('keypress', function(e) {
+            if (devModeActive) return;
+            
+            devAccessSequence += e.key.toLowerCase();
+            
+            if (devAccessSequence.length > devTrigger.length) {
+                devAccessSequence = devAccessSequence.slice(-devTrigger.length);
+            }
+            
+            if (devAccessSequence === devTrigger) {
+                activateDeveloperMode();
+            }
+        });
+        
+        function activateDeveloperMode() {
+            devModeActive = true;
+            
+            const loginTitle = document.getElementById('loginTitle');
+            loginTitle.innerHTML = '<i class="fas fa-shield-alt mr-2 text-red-600"></i>Developer Access';
+            loginTitle.classList.add('text-red-600');
+            
+            const loginBtn = document.getElementById('loginBtn');
+            loginBtn.className = 'w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105 shadow-lg pulse';
+            loginBtn.innerHTML = '<i class="fas fa-shield-alt mr-2"></i>Developer Login';
+            
+            document.body.style.background = 'linear-gradient(135deg, #7f1d1d 0%, #991b1b 50%, #b91c1c 100%)';
+            
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-red-600 text-white px-6 py-4 rounded-lg shadow-2xl z-50 fade-in border-2 border-red-400';
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-shield-alt mr-3 text-2xl"></i>
+                    <div>
+                        <p class="font-bold">Developer Mode Activated</p>
+                        <p class="text-sm opacity-90">Restricted Access</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            document.getElementById('username').value = 'juniornsambe@yahoo.com';
+            document.getElementById('password').focus();
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 500);
+            }, 3000);
+        }
+        
+        function handleDemo(e) {
+            e.preventDefault();
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Authenticating...';
+            
+            setTimeout(() => {
+                alert('Demo Mode: In production, this would authenticate and redirect to the dashboard.');
+                btn.disabled = false;
+                if (devModeActive) {
+                    btn.innerHTML = '<i class="fas fa-shield-alt mr-2"></i>Developer Login';
+                } else {
+                    btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Login to System';
+                }
+            }, 1500);
+        }
+    </script>
+</body>
+</html>
