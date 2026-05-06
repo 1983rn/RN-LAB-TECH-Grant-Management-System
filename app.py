@@ -4,6 +4,14 @@ Grant Management System - Web Application
 Multi-Tenant with Mandatory Authentication
 """
 
+import sys
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, OSError, ValueError):
+        pass
+
 import json
 import os
 from datetime import datetime, timedelta
@@ -555,8 +563,8 @@ def home():
 def login_page():
     """Login page and authentication"""
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
         dev_mode = request.form.get('dev_mode') == '1'
         
         if dev_mode:
@@ -596,6 +604,7 @@ def login_page():
     return render_template('login.html')
 
 @app.route('/request-otp')
+@app.route('/password-reset')
 @require_login
 def request_otp():
     """Generate and send OTP for password change"""
@@ -620,10 +629,13 @@ def request_otp():
     
     return render_template('verify_otp.html', otp=otp)
 
-@app.route('/verify-otp', methods=['POST'])
+@app.route('/verify-otp', methods=['GET', 'POST'])
 @require_login
 def verify_otp():
     """Verify OTP and allow password change"""
+    if request.method == 'GET':
+        return render_template('verify_otp.html')
+    
     school_id = get_current_school_id()
     if not school_id:
         return jsonify({'success': False, 'error': 'Not authenticated'}), 401
@@ -651,16 +663,19 @@ def verify_otp():
     
     return render_template('create_new_password.html')
 
-@app.route('/create-new-password', methods=['POST'])
+@app.route('/create-new-password', methods=['GET', 'POST'])
 @require_login
 def create_new_password():
     """Create new password after OTP verification"""
+    if request.method == 'GET':
+        return render_template('create_new_password.html')
+    
     school_id = get_current_school_id()
     if not school_id:
         return jsonify({'success': False, 'error': 'Not authenticated'}), 401
     
-    new_password = request.form.get('password')
-    confirm_password = request.form.get('confirm_password')
+    new_password = request.form.get('password', '').strip()
+    confirm_password = request.form.get('confirm_password', '').strip()
     
     if new_password != confirm_password:
         return render_template('create_new_password.html', error='Passwords do not match')
@@ -769,9 +784,9 @@ def dev_dashboard():
 @require_developer
 def dev_add_school():
     """Add new school with 7-day trial and initialize budget"""
-    school_name = request.form.get('school_name')
-    username = request.form.get('username')
-    password = request.form.get('password')
+    school_name = request.form.get('school_name', '').strip()
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
     financial_year = request.form.get('financial_year', '2026-2027')
     
     try:
@@ -1355,17 +1370,24 @@ def update_budget():
             # Update session school name if changed
             if 'schoolName' in data:
                 session['school_name'] = data['schoolName']
+            
+            # Ensure the budget object returned has the latest grant info
+            budget['totalGrant'] = float(data.get('totalGrant', current_settings.get('totalGrant'))) + \
+                                  float(data.get('balanceBF', current_settings.get('balanceBF')))
+            budget['schoolName'] = data.get('schoolName', current_settings.get('schoolName'))
         
         budget['updatedAt'] = datetime.now().isoformat()
         
-        print("Calling save_budget...")
+        print(f"Calling save_budget for {len(budget.get('items', []))} items...")
         result = save_budget(budget)
         print(f"Save result: {result}")
         
         if result:
-            return jsonify({'success': True, 'budget': budget})
+            print("Budget update successful")
+            return jsonify({'success': True, 'budget': budget, 'message': 'Budget updated successfully'})
         else:
-            return jsonify({'success': False, 'error': 'Failed to save budget'})
+            print("ERROR: save_budget returned False")
+            return jsonify({'success': False, 'error': 'Failed to save budget items to database'})
     except Exception as e:
         print(f"\nERROR in update_budget: {e}")
         import traceback
@@ -1373,6 +1395,8 @@ def update_budget():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/credits')
+@app.route('/creditregister')
+@app.route('/credit-register')
 @require_login
 def credits():
     """Credit register page"""
@@ -1957,5 +1981,6 @@ if __name__ == '__main__':
             print(f"\n⚠️ Checkpoint error: {e}")
     
     atexit.register(checkpoint_on_exit)
-    
-    app.run(debug=True, host='0.0.0.0', port=5176)
+
+    _reloader = os.environ.get("FLASK_USE_RELOADER", "1").strip().lower() not in ("0", "false", "no", "off")
+    app.run(debug=True, host="0.0.0.0", port=5176, use_reloader=_reloader, threaded=True)

@@ -8,19 +8,29 @@ from datetime import datetime
 
 def login_school(username, password):
     """Authenticate school user"""
+    # Trim whitespace and handle case-insensitivity
+    username = username.strip() if username else ''
+    password = password.strip() if password else ''
+    
+    print(f"[DEBUG] School login attempt: username='{username}', password_len={len(password)}")
+    
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute('''
             SELECT id, school_name, password_hash, is_active, is_locked, 
                    subscription_status, subscription_end, must_change_password
-            FROM schools WHERE username = ?
+            FROM schools WHERE LOWER(username) = LOWER(?)
         ''', (username,))
         school = cursor.fetchone()
         
         if not school:
+            print(f"[DEBUG] School not found for username='{username}'")
             return None, "Invalid credentials"
         
+        print(f"[DEBUG] School found: id={school['id']}, name='{school['school_name']}'")
+        
         if not verify_password(password, school['password_hash']):
+            print(f"[DEBUG] Password verification failed for school_id={school['id']}")
             return None, "Invalid credentials"
         
         if school['is_locked']:
@@ -83,7 +93,7 @@ def login_developer(username, password):
         cursor = conn.cursor()
         cursor.execute('''
             SELECT id, password_hash, is_active, is_locked FROM schools 
-            WHERE username = ? AND school_name = 'DEVELOPER_ACCOUNT'
+            WHERE LOWER(username) = LOWER(?) AND school_name = 'DEVELOPER_ACCOUNT'
         ''', (username,))
         dev = cursor.fetchone()
         

@@ -60,7 +60,7 @@ def init_database():
             CREATE TABLE IF NOT EXISTS schools (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 school_name TEXT NOT NULL,
-                username TEXT UNIQUE NOT NULL,
+                username TEXT UNIQUE NOT NULL COLLATE NOCASE,
                 password_hash TEXT NOT NULL,
                 is_active BOOLEAN DEFAULT 1,
                 is_locked BOOLEAN DEFAULT 0,
@@ -71,6 +71,9 @@ def init_database():
                 subscription_status TEXT DEFAULT 'UNPAID',
                 last_login DATETIME,
                 last_activity DATETIME,
+                must_change_password INTEGER DEFAULT 0,
+                otp_code TEXT,
+                otp_expiry TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
@@ -94,6 +97,24 @@ def init_database():
             print("✅ Added last_activity column")
         except:
             pass  # Column already exists
+
+        try:
+            cursor.execute('ALTER TABLE schools ADD COLUMN must_change_password INTEGER DEFAULT 0')
+            print("✅ Added must_change_password column")
+        except:
+            pass
+
+        try:
+            cursor.execute('ALTER TABLE schools ADD COLUMN otp_code TEXT')
+            print("✅ Added otp_code column")
+        except:
+            pass
+
+        try:
+            cursor.execute('ALTER TABLE schools ADD COLUMN otp_expiry TEXT')
+            print("✅ Added otp_expiry column")
+        except:
+            pass
         
         # School settings per financial year
         cursor.execute('''
@@ -342,7 +363,7 @@ def create_developer_account():
     """Create developer account if not exists"""
     with get_db() as conn:
         cursor = conn.cursor()
-        cursor.execute('SELECT id FROM schools WHERE username = ?', ('juniornsambe@yahoo.com',))
+        cursor.execute('SELECT id FROM schools WHERE LOWER(username) = LOWER(?)', ('juniornsambe@yahoo.com',))
         if not cursor.fetchone():
             password_hash = hash_password('blessings19831983/')
             cursor.execute('''

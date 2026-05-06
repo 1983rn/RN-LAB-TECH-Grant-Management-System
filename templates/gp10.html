@@ -97,7 +97,7 @@
         @media print {
             @page {
                 size: A4 portrait;
-                margin: 0.8cm 0.5cm 0.8cm 2.5cm;
+                margin: 0.5cm;
             }
 
             .no-print {
@@ -107,7 +107,7 @@
             body {
                 padding: 0;
                 margin: 0 auto;
-                font-size: 14px;
+                font-size: 12px;
                 max-width: 100%;
             }
 
@@ -123,12 +123,12 @@
             }
 
             .col {
-                padding: 8px;
+                padding: 5px;
             }
 
             .field-content {
-                min-height: 35px;
-                font-size: 15px;
+                min-height: 25px;
+                font-size: 13px;
             }
 
             .account-table th,
@@ -138,12 +138,12 @@
             }
 
             .footer-grid {
-                font-size: 13px;
-                line-height: 1.6;
+                font-size: 11px;
+                line-height: 1.3;
             }
 
             .footer-col {
-                padding: 10px;
+                padding: 5px;
             }
 
             .box-title {
@@ -186,23 +186,14 @@
             <div class="col" style="flex: 1;">
                 <span class="box-title">Name of the supplier, service provider or person receiving the funds</span>
                 {% set names_list = debit.supplierName.split('\n') %}
-                {% if names_list|length > 1 %}
-                    {% for entry in names_list %}
-                        {% if entry.strip() %}
-                            {% if '=' in entry %}
-                                <div style="font-weight: bold;">{{ entry.split('=')[0].strip() }}</div>
-                            {% else %}
-                                <div style="font-weight: bold;">{{ entry.strip() }}</div>
-                            {% endif %}
-                        {% endif %}
-                    {% endfor %}
-                {% else %}
-                    {% if '=' in debit.supplierName %}
-                        <div class="field-content" style="font-weight: bold;">{{ debit.supplierName.split('=')[0].strip() }}</div>
+                {% set first_entry = names_list[0].strip() %}
+                <div class="field-content" style="font-weight: bold;">
+                    {% if '=' in first_entry %}
+                        {{ first_entry.split('=')[0].strip() }}
                     {% else %}
-                        <div class="field-content" style="font-weight: bold;">{{ debit.supplierName }}</div>
+                        {{ first_entry }}
                     {% endif %}
-                {% endif %}
+                </div>
                 <div style="margin-top: 20px;"><strong>FOR:</strong> {{ budget.schoolName }}</div>
             </div>
             <div class="col" style="flex: 1;">
@@ -221,11 +212,15 @@
             <div class="col" style="flex: 1;">K</div>
             <div class="col" style="flex: 0.3;">T</div>
         </div>
-        <div class="row" style="min-height: 300px;">
+        <div class="row" style="min-height: 200px;">
             <div class="col" style="flex: 3; position: relative;">
                 <div style="margin-bottom: 15px; line-height: 1.5;">
                     BEING PAYMENT TO THE ABOVE NAMED ADDRESSEE FOR <span style="text-decoration: underline;">{{
                         debit.description }}</span> AS PER ATTACHED SUPPORTING DOCUMENTS.
+                </div>
+
+                <div style="font-weight: bold; margin-bottom: 10px;">
+                    CATEGORY: <span style="text-decoration: underline;">{{ debit.subItemDescription }}</span>
                 </div>
 
                 {% set suppliers = debit.supplierName.split('\n') %}
@@ -239,6 +234,7 @@
                 {% if has_amounts|length > 0 %}
                 {# Payees with individual amounts from Name=Amount format #}
                 <div style="margin-left: 20px; font-size: 13px; margin-bottom: 15px;">
+                    <div style="font-style: italic; margin-bottom: 5px;">Full List of Recipients:</div>
                     {% for entry in has_amounts %}
                         {% set parts = entry.split('=', 1) %}
                         <div style="display: flex; width: 400px; margin-bottom: 4px;">
@@ -251,6 +247,7 @@
                 {% elif suppliers|length > 1 %}
                 {# Multiple names without amounts - show names only #}
                 <div style="margin-left: 20px; font-size: 13px; margin-bottom: 15px;">
+                    <div style="font-style: italic; margin-bottom: 5px;">Full List of Recipients:</div>
                     {% for name in suppliers %}
                     {% if name.strip() %}
                     <div>{{ name.strip() }}</div>
@@ -259,9 +256,8 @@
                 </div>
                 {% else %}
                 {# Single person, single line #}
-                <div style="display: flex; justify-content: space-between;">
-                    <span>{{ debit.subItemDescription }} - {{ debit.supplierName }} (MWK {{
-                        "{:,.2f}".format(debit.amount) }})</span>
+                <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                    <span><strong>Payee:</strong> {{ debit.supplierName }} (MWK {{ "{:,.2f}".format(debit.amount) }})</span>
                 </div>
                 {% endif %}
                 <div style="position: absolute; bottom: 5px; left: 5px;">

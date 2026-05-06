@@ -1,0 +1,947 @@
+[
+  {
+    "id": "TC001",
+    "title": "Log in as a school tenant and reach the home dashboard",
+    "description": "Verifies a school user can sign in with valid credentials and lands on the school home dashboard.",
+    "category": "School login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the home dashboard"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC002",
+    "title": "Log out from an authenticated session",
+    "description": "Verifies that a signed-in school user can log out and is returned to the login screen with the session ended.",
+    "category": "Logout",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /home"
+      },
+      {
+        "type": "action",
+        "description": "Trigger the logout action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is on the login page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login form is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC003",
+    "title": "Logged-out user cannot access an authenticated route after logout",
+    "description": "Verifies that after logging out, attempting to access an authenticated page is blocked by redirecting to login.",
+    "category": "Logout",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /home"
+      },
+      {
+        "type": "action",
+        "description": "Trigger the logout action"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /budget"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is on the login page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login form is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC004",
+    "title": "Developer dashboard requires authentication",
+    "description": "Verifies that unauthenticated users cannot access the developer dashboard and are routed to login.",
+    "category": "Developer dashboard (multi-school administration)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /dev/dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is prompted to log in"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC005",
+    "title": "Itemized view requires authentication",
+    "description": "Verifies that unauthenticated users cannot access the itemized breakdown and are routed to login.",
+    "category": "Itemized and tracking views",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /itemized"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is prompted to log in"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC006",
+    "title": "Tracking view requires authentication",
+    "description": "Verifies that unauthenticated users cannot access tracking reports and are routed to login.",
+    "category": "Itemized and tracking views",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /tracking"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is prompted to log in"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC007",
+    "title": "Initialize a new budget and confirm budget workspace is created",
+    "description": "Verifies a school user can initialize budget for an academic year and term and then see the initialized budget in the budget view.",
+    "category": "Grant budget workspace",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to initialize the budget"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid academic year"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid term"
+      },
+      {
+        "type": "action",
+        "description": "Submit the budget initialization form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the budget view is displayed for the selected academic context"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC008",
+    "title": "Update budget allocations and see updated totals in grant summary",
+    "description": "Verifies a school user can edit budget allocations, submit updates, and see totals reflected in the grant summary.",
+    "category": "Grant budget workspace",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the budget view"
+      },
+      {
+        "type": "action",
+        "description": "Edit at least one budget allocation value with a valid amount"
+      },
+      {
+        "type": "action",
+        "description": "Submit the budget update"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the grant summary view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the grant summary totals reflect the updated budget allocations"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC009",
+    "title": "Log out from a non-home authenticated page",
+    "description": "Verifies that logout works consistently when initiated from another authenticated area and returns the user to login.",
+    "category": "Logout",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /budget"
+      },
+      {
+        "type": "action",
+        "description": "Trigger the logout action"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is on the login page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login form is displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC010",
+    "title": "Add a credit and confirm it appears in the credits register",
+    "description": "Verifies a school user can add a credit and then see the new credit entry listed in the credits register.",
+    "category": "Grant budget workspace",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the credits view"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid amount into the credit amount field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a unique reference text into the credit reference field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the credit"
+      },
+      {
+        "type": "action",
+        "description": "Submit the credit form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the credits list includes a credit entry with the submitted reference text"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC011",
+    "title": "Add a debit and access its document options from the debits register",
+    "description": "Verifies a school user can add a debit, select it in the register, and see document actions available for that debit.",
+    "category": "Grant budget workspace",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the debits view"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid amount into the debit amount field"
+      },
+      {
+        "type": "action",
+        "description": "Fill a unique vendor or description text into the debit description field"
+      },
+      {
+        "type": "action",
+        "description": "Select a valid date for the debit"
+      },
+      {
+        "type": "action",
+        "description": "Submit the debit form"
+      },
+      {
+        "type": "action",
+        "description": "Select the newly created debit row in the debits list"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify document options or a document preview area is available for the selected debit"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC012",
+    "title": "User can log in again after logging out",
+    "description": "Verifies that after logging out, the user can sign in again and reach the authenticated home page.",
+    "category": "Logout",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /home"
+      },
+      {
+        "type": "action",
+        "description": "Trigger the logout action"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user lands on the home dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify dashboard grant totals are displayed"
+      }
+    ],
+    "priority": "High"
+  },
+  {
+    "id": "TC013",
+    "title": "Developer can view the multi-school dashboard list",
+    "description": "Verifies that an authenticated developer can open the developer dashboard and see a list of schools with subscription status information.",
+    "category": "Developer dashboard (multi-school administration)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Enable developer mode if the login form provides a developer toggle"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the developer dashboard"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a list of schools is displayed"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify subscription status information is displayed for at least one school"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC014",
+    "title": "Logout route ends the session when visited directly",
+    "description": "Verifies that visiting the logout route ends any active session and results in the login screen being shown.",
+    "category": "Logout",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /logout"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user is on the login page"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the login form is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC015",
+    "title": "Developer can edit a school's subscription or metadata and see the update reflected",
+    "description": "Verifies that editing a school's subscription or metadata from the developer dashboard persists and is visible after saving.",
+    "category": "Developer dashboard (multi-school administration)",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Enable developer mode if the login form provides a developer toggle"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the developer dashboard"
+      },
+      {
+        "type": "action",
+        "description": "Select a school row from the list"
+      },
+      {
+        "type": "action",
+        "description": "Change an editable subscription or metadata field to a different valid value"
+      },
+      {
+        "type": "action",
+        "description": "Submit the dashboard changes"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the updated value is shown for that school in the dashboard list"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC016",
+    "title": "Itemized view shows itemized budget breakdown",
+    "description": "Verifies that an authenticated school user can open the itemized page and see an itemized budget breakdown for the current academic context.",
+    "category": "Itemized and tracking views",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the itemized view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an itemized budget breakdown is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC017",
+    "title": "View tracking reports for the current academic context",
+    "description": "Verifies a school user can open the tracking view and see budget tracking/reporting data for the current year and term.",
+    "category": "Grant budget workspace",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the tracking view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify budget tracking or reporting data is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC018",
+    "title": "Tracking view shows trend and status reporting",
+    "description": "Verifies that an authenticated school user can open the tracking page and view trend/status reporting for budget tracking.",
+    "category": "Itemized and tracking views",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the navigation item to open the tracking view"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify budget tracking trend or status report content is displayed"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC019",
+    "title": "Update school settings and see changes reflected in the UI",
+    "description": "Verifies a school user can modify a settings value, save it, and see the updated setting reflected on the settings page.",
+    "category": "Settings",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the settings view"
+      },
+      {
+        "type": "action",
+        "description": "Modify a settings field with a new valid value"
+      },
+      {
+        "type": "action",
+        "description": "Submit the settings form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the settings view reflects the updated value"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC020",
+    "title": "Download budget export as an Excel file",
+    "description": "Verifies a school user can trigger the budget Excel export from the budget workspace and receives a downloadable file.",
+    "category": "Grant budget workspace",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the budget view"
+      },
+      {
+        "type": "action",
+        "description": "Click the control to export the budget to Excel"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an Excel file download is initiated"
+      }
+    ],
+    "priority": "Medium"
+  },
+  {
+    "id": "TC021",
+    "title": "Show validation when required credit field is missing",
+    "description": "Verifies the credits form blocks submission when a required field is missing and shows a validation error.",
+    "category": "Grant budget workspace",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link to open the credits view"
+      },
+      {
+        "type": "action",
+        "description": "Fill a valid amount into the credit amount field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the credit form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a credit form validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC022",
+    "title": "Request password reset OTP page is accessible from an authenticated session",
+    "description": "Verifies that an authenticated user can open the OTP request page and see the OTP entry UI.",
+    "category": "Password reset (OTP) and set new password",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Click the link or menu item to start the password reset OTP flow"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the OTP entry form is displayed"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC023",
+    "title": "Show validation when password is missing on login",
+    "description": "Verifies submitting the login form without a password shows an on-page validation error and does not log the user in.",
+    "category": "School login",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill invalid_user into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a login form validation error is visible"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC024",
+    "title": "Incorrect OTP is rejected with a validation error",
+    "description": "Verifies that submitting an incorrect OTP shows a validation error and does not proceed to the new password page.",
+    "category": "Password reset (OTP) and set new password",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /request-otp"
+      },
+      {
+        "type": "action",
+        "description": "Fill an incorrect OTP into the OTP field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the OTP form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify an OTP validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the user remains on the OTP verification step"
+      }
+    ],
+    "priority": "Low"
+  },
+  {
+    "id": "TC025",
+    "title": "New password form enforces required inputs",
+    "description": "Verifies that submitting the new password form with missing required fields shows validation and does not complete the reset.",
+    "category": "Password reset (OTP) and set new password",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to /login"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_USER}} into the username field"
+      },
+      {
+        "type": "action",
+        "description": "Fill {{LOGIN_PASSWORD}} into the password field"
+      },
+      {
+        "type": "action",
+        "description": "Submit the login form"
+      },
+      {
+        "type": "action",
+        "description": "Navigate to /create-new-password"
+      },
+      {
+        "type": "action",
+        "description": "Leave the new password field empty"
+      },
+      {
+        "type": "action",
+        "description": "Submit the new password form"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify a required-field validation error is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Verify the password reset is not completed"
+      }
+    ],
+    "priority": "Low"
+  }
+]

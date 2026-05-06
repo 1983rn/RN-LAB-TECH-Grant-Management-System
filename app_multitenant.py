@@ -37,8 +37,8 @@ def index():
 def login_page():
     """Login page and authentication"""
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '').strip()
         dev_mode = request.form.get('dev_mode') == '1'
         
         if dev_mode:
@@ -123,9 +123,9 @@ def dev_dashboard():
 @require_developer
 def dev_add_school():
     """Add new school"""
-    school_name = request.form.get('school_name')
-    username = request.form.get('username')
-    password = request.form.get('password')
+    school_name = request.form.get('school_name', '').strip()
+    username = request.form.get('username', '').strip()
+    password = request.form.get('password', '').strip()
     subscription_end = request.form.get('subscription_end')
     
     with get_db() as conn:

@@ -722,9 +722,11 @@
                 return response.json();
             })
             .then(data => {
+                console.log('Budget save response:', data);
                 if (data.success) {
                     showNotification('Budget saved successfully');
                 } else {
+                    console.error('Save failed:', data.error);
                     showNotification('Failed to save budget: ' + data.error, 'error');
                 }
             })
@@ -760,15 +762,21 @@
         })
             .then(response => response.json())
             .then(data => {
+                console.log('Grant info update response:', data);
                 if (data.success) {
                     showNotification('Grant information updated successfully');
                     closeBudgetInfoModal();
-                    setTimeout(() => window.location.reload(), 1000);
+                    setTimeout(() => {
+                        console.log('Reloading page...');
+                        window.location.reload();
+                    }, 1000);
                 } else {
+                    console.error('Update failed:', data.error);
                     showNotification('Failed to update grant: ' + data.error, 'error');
                 }
             })
             .catch(error => {
+                console.error('Update error:', error);
                 showNotification('Error updating grant: ' + error.message, 'error');
             });
     });

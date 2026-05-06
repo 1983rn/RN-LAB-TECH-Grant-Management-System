@@ -14,7 +14,7 @@ def migrate_json_to_database():
         cursor = conn.cursor()
         
         # Check if default school exists
-        cursor.execute("SELECT id FROM schools WHERE username = ?", ('admin',))
+        cursor.execute("SELECT id FROM schools WHERE LOWER(username) = LOWER(?)", ('admin',))
         school = cursor.fetchone()
         
         if not school:
