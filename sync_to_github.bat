@@ -14,7 +14,7 @@ git add .
 echo.
 
 echo 3. Committing changes...
-git commit -m "Refactor authentication, optimize loader visuals, and fix budget persistence"
+git commit -m "Enhance multi-tenant isolation by clearing session on logout and securing IPDC sessions"
 echo.
 
 echo 4. Pushing to GitHub (main branch)...

@@ -373,13 +373,10 @@
                             {% if budget %}
                             {% for item in budget['items'] %}
                             {% set funds = available_funds[item.id] %}
-                            {% if funds.credited > 0 %}
                             <option value="{{ item.id }}" data-code="{{ item.code }}"
                                 data-desc="{{ item.subItemDescription }}" data-balance="{{ funds.balance }}">
-                                {{ item.subItemDescription }} ({{ item.code }}) - Bal: K{{
-                                "{:,.2f}".format(funds.balance) }}
+                                {{ item.subItemDescription }} ({{ item.code }}) - Alloc: K{{ "{:,.2f}".format(item.totalAllocation) }} | Bal: K{{ "{:,.2f}".format(funds.balance) }}
                             </option>
-                            {% endif %}
                             {% endfor %}
                             {% endif %}
                         </select>

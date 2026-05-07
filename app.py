@@ -709,7 +709,8 @@ def logout():
             with get_db() as conn:
                 cursor = conn.cursor()
                 cursor.execute('UPDATE school_sessions SET is_online = 0 WHERE school_id = ? AND is_online = 1', (school_id,))
-        session.pop('user', None)
+        # Completely clear session to prevent any data leakage (e.g., academic_year, term) between different logins
+        session.clear()
     return redirect(url_for('login_page'))
 
 # Developer Dashboard Routes
@@ -1636,8 +1637,16 @@ def ipdc_minute(debit_id):
 @require_login
 def save_combined_ipdc_data():
     data = request.json
+    school_id = get_current_school_id()
+    if not school_id:
+        return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+    
     session_id = str(uuid.uuid4())
-    ipdc_sessions[session_id] = data
+    # Bind the session to the specific school to prevent cross-tenant data leakage
+    ipdc_sessions[session_id] = {
+        'school_id': school_id,
+        'data': data
+    }
     return jsonify({'success': True, 'session_id': session_id})
 
 
@@ -1646,9 +1655,20 @@ def save_combined_ipdc_data():
 def combined_ipdc():
     """Generate Combined IPDC Minute for multiple debits"""
     session_id = request.args.get('session_id')
+    school_id = get_current_school_id()
     
     if session_id and session_id in ipdc_sessions:
-        data = ipdc_sessions[session_id]
+        session_obj = ipdc_sessions[session_id]
+        
+        # Ensure the session belongs to the current school
+        if isinstance(session_obj, dict) and 'school_id' in session_obj:
+            if session_obj['school_id'] != school_id:
+                return "Unauthorized access to IPDC data", 403
+            data = session_obj['data']
+        else:
+            # Fallback for old in-memory sessions if any
+            data = session_obj
+
         meeting = data['meeting']
         items_data = data['items']
         
